@@ -89,7 +89,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.6.0";
+const VER="1.6.1";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -293,7 +293,14 @@ function fardMini(F){const sc=F.code&&F.code.length===20?`${F.code.slice(0,13)}<
   return `<div class="scard"><div class="snum">Nº ${g3(F.n)}</div>
     <div class="sline"><span>Prensa: <b>${F.p||"—"}</b></span>${sc?`<span class="ssai">SAI: ${sc}</span>`:""}</div>
     <span class="slab">FAZENDA/PRODUTOR:</span><div class="sval">${esc(F.lote?prodOfLote(F.lote)||"—":"—")}</div>
-    <span class="slab">LOTE:</span><div class="slote">${F.lote?esc(F.lote):"—"}</div></div>`}
+    <div class="s2 slt"><div><span class="slab">LOTE:</span><div class="slote">${F.lote?esc(F.lote):"—"}</div></div><div><span class="slab">SITUAÇÃO DO LOTE:</span>${loteSit(F)}</div></div></div>`}
+function loteSit(F){const L=F.lote?IX.lotes.get(F.lote):null;let st,cls="no";
+  if(!F.lote)st="Fardinho ainda sem lote (aguardando HVI)";
+  else if(!L)st=`Lote ${esc(F.lote)} ainda não cadastrado em Todos os lotes`;
+  else if(L.expd){st=`Lote ${esc(F.lote)} já expedido`;cls="ex"}
+  else if(L.boxes.length){st=`✓ Lote aberto no box <b>${L.boxes.map(b=>esc(b[1])).join("</b> e <b>")}</b>`;cls="ok"}
+  else st=`Lote ${esc(F.lote)} ainda sem box no pátio (lote novo a emblocar)`;
+  return `<div class="sbox ${cls}">${st}</div>`}
 function startFromFard(F){const L=F.lote?IX.lotes.get(F.lote):null;
   if(!F.lote||(L&&L.expd)){sBad();showSheet(`${fardMini(F)}<div class="sbad">${!F.lote?"Fardinho ainda <b>sem lote</b> (aguardando HVI). Comece por outro fardinho.":`Lote <b>${esc(F.lote)}</b> já <b>expedido</b>. Confira o fardinho.`}</div><button class="btn pri big" type="button" data-x>OK</button>`);return}
   const bx=lotBoxes(F.lote),sp={b:"",r:"",sd:"",k:""};
