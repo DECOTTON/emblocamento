@@ -74,12 +74,14 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .scard .sq3{grid-template-columns:1.3fr 1fr 1fr}.scard .sq b.st{font:700 15px/1.2 system-ui,sans-serif;margin-top:3px}
 .scard .sexp .fx,.scard .sexp .fn{padding:6px 8px;border-radius:6px;font-size:14px;font-weight:600;margin-top:2px}.scard .sexp .fx{background:#FDEBD9;color:#7A3E06}.scard .sexp .fn{background:#ECEFEE;color:#1D2E2C}.scard .sxl{font-size:13px;margin-top:6px}
 .sbad{margin-top:10px;padding:10px;border-radius:8px;background:#FDECEA;color:#8A1C12;font-weight:600}
+.pkfind{display:flex;gap:6px;margin-bottom:8px}.pkfind input{flex:1;min-width:0;font-size:17px;padding:10px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:#fff}.pkfind .btn{padding:8px 12px}
+.pkmsg{margin:0 0 8px;padding:8px 10px;border-radius:8px;background:#EEF1F0;font-size:14px}.pkmsg a{color:var(--acc);font-weight:700}
 .hide{display:none!important}
 </style>
 </head>
 <body>
 <header><h1><img src="logo.png" alt="" class="hlogo">Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button>
-<div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" placeholder="Aguardando leitura…"><button class="sb" id="bAbc" type="button" title="Trocar teclado">ABC</button><button class="sb" id="bGo" type="button">OK</button><button class="sb pri" id="bCam" type="button" title="Câmera">📷</button></div></header>
+<div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" placeholder="Etiqueta SAI ou Nº do fardinho"><button class="sb" id="bGo" type="button">OK</button><button class="sb pri" id="bCam" type="button" title="Câmera">📷</button></div></header>
 <main id="app"></main>
 <input type="file" id="fPac" accept=".txt,.json,text/plain,application/json" hidden>
 <script>
@@ -89,7 +91,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.7.0";
+const VER="1.8.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -157,7 +159,7 @@ function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
 
 // ---------- telas ----------
 function render(){
-  $("#sbar").classList.toggle("hide",!PAC);if(PAC)$("#scan").placeholder=cur()?"Aguardando leitura…":"Leia o 1º fardinho do box";
+  $("#sbar").classList.toggle("hide",!PAC);if(PAC)$("#scan").placeholder="Etiqueta SAI ou Nº do fardinho";
   $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
   const a=$("#app");
   if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
@@ -198,17 +200,33 @@ function pkSelects(x,pk){const T=boxTree(),R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(
 function pkWire(x,pk,redraw){const sel=(id,f)=>{const e=$("#"+x+id);if(e)e.onchange=()=>{f(e.value);redraw()}};
   sel("B",v=>{pk.b=v;pk.r="";pk.sd="";pk.k=""});sel("R",v=>{pk.r=v;pk.sd="";pk.k=""});sel("S",v=>{pk.sd=v;pk.k=""});sel("K",v=>{pk.k=v})}
 function pickHTML(){const pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});
-  return `<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><h2 style="flex:1;margin:0">Selecione o box</h2><button class="btn" type="button" id="pkClr" style="padding:8px 14px">✕ Limpar</button></div>${pkSelects("pk",pk)}</div>`}
-function wirePick(){const pk=ui.pk;pkWire("pk",pk,render);
-  const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.pk={b:"",r:"",sd:"",k:""};const i=$("#scan");if(i)i.value="";render();focusScan()};
+  return `<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><h2 style="flex:1;margin:0">Selecione o box</h2><button class="btn" type="button" id="pkClr" style="padding:8px 14px">✕ Limpar</button></div>
+    <div class="pkfind"><input type="text" id="pkLote" inputmode="numeric" autocomplete="off" placeholder="Buscar lote (ex.: 1064)" value="${esc(ui.pkLote||"")}"><button class="btn" type="button" id="pkLoteGo">🔍 Buscar</button></div>
+    ${ui.pkMsg?`<p class="pkmsg">${ui.pkMsg}</p>`:""}${pkSelects("pk",pk)}</div>`}
+// buscar lote: preenche pátio, rua, lado e box com o box do lote (ou mostra os boxes, se houver mais de um)
+function buscaLote(v){const c=String(v||"").trim();ui.pkLote=c;ui.pkMsg="";if(!c){render();return}
+  const L=IX.lotes.get(c)||[...IX.lotes.values()].find(x=>x.c.toLowerCase()===c.toLowerCase());
+  const fill=k=>{const[,b,r,pos]=k.split("|"),p2=+pos;ui.pk={b,r:String(+r),sd:p2%2?"A":"B",k}};
+  if(!L){ui.pkMsg=`Lote <b>${esc(c)}</b> não encontrado no pacote.`;render();return}
+  if(L.expd){ui.pkMsg=`Lote <b>${esc(c)}</b> já expedido.`;render();return}
+  if(!L.boxes.length){ui.pk={b:"",r:"",sd:"",k:""};ui.pkMsg=`Lote <b>${esc(c)}</b> · ${esc(L.prod||"")}: ainda sem box (lote novo). Selecione o box abaixo.`;render();return}
+  fill(L.boxes[0][0]);
+  ui.pkMsg=`Lote <b>${esc(c)}</b> · ${esc(L.prod||"")}${L.boxes.length>1?` · também em: ${L.boxes.slice(1).map(b=>`<a href="#" data-pkk="${esc(b[0])}">${esc(b[1])}</a>`).join(", ")}`:""}`;render()}
+function wirePick(){const pk=ui.pk;pkWire("pk",pk,()=>{ui.pkMsg="";render()});
+  const li=$("#pkLote");if(li){$("#pkLoteGo").onclick=()=>{buscaLote(li.value);focusScan()};li.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();buscaLote(li.value);focusScan()}}}
+  document.querySelectorAll("[data-pkk]").forEach(a=>a.onclick=e=>{e.preventDefault();const k=a.dataset.pkk,[,b,r,pos]=k.split("|");ui.pk={b,r:String(+r),sd:+pos%2?"A":"B",k};render()});
+  const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.pk={b:"",r:"",sd:"",k:""};ui.pkLote="";ui.pkMsg="";const i=$("#scan");if(i)i.value="";render();focusScan()};
   const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
 // leituras no aparelho (pelo Menu)
 function openLeituras(){showSheet(`${sessListHTML()}<button class="btn big" type="button" data-x>Fechar</button>`,o=>{
   o.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();closeSheet();render();focusScan()});
+  o.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const z=S.sessoes.find(x=>x.id===b.dataset.del);if(!z)return;
+    if(!confirm(`Remover as ${z.lidos.length} leitura(s) do box ${z.addr} (lote ${z.lote||"?"})? Elas não serão exportadas.`))return;
+    S.sessoes=S.sessoes.filter(x=>x!==z);if(S.atual===z.id)S.atual=null;saveState();closeSheet();render();openLeituras();toast("Leituras removidas")});
   const e=o.querySelector("#bExp");if(e)e.onclick=()=>{closeSheet();exportar()}})}
 function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.inicio).localeCompare(String(a.fim||a.inicio)));
   const pend=L.filter(s=>!s.exp).length;
-  return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button></span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
+  return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button>${s.exp?"":` <button class="btn" type="button" data-del="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px;color:var(--bad)" title="Remover estas leituras">🗑</button>`}</span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
     ${L.length?`<button class="btn ${pend?"pri":""} big" type="button" id="bExp" style="margin-top:10px">⤓ Exportar leituras${pend?` (${pend} pendente${pend>1?"s":""})`:""}</button>`:""}</div>`}
 function focusScan(){const i=$("#scan");if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&document.activeElement!==i){try{i.focus({preventScroll:true})}catch(e){i.focus()}}}
 function wire(){
@@ -222,13 +240,12 @@ function wire(){
 // campo de leitura fixo (nunca é recriado: o teclado do coletor continua aberto entre as leituras)
 (()=>{const i=$("#scan");let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";_pv="";if(v)onRead(v)};
   $("#bGo").onclick=go;$("#bCam").onclick=openCam;
-  $("#bAbc").onclick=()=>{const t=i.inputMode==="text";i.inputMode=t?"numeric":"text";$("#bAbc").textContent=t?"ABC":"123";i.blur();i.focus()};
   i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
   // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
   i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
   i.addEventListener("blur",()=>setTimeout(()=>{const a=document.activeElement;if(!a||a===document.body)focusScan()},300))})();
 // tocar num botão não tira o foco do campo de leitura (o teclado não fecha)
-document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn");if(b&&document.activeElement===$("#scan")&&b.id!=="bAbc")e.preventDefault()},true);
+document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn");if(b&&document.activeElement===$("#scan")&&!b.closest(".pkfind"))e.preventDefault()},true);
 // leitor do coletor: alguns modos colocam o texto no campo sem avisar a página (sem "input"/Enter).
 // Então o campo é vigiado: código completo parado por um instante → processa.
 let _pv="",_pt=0;
