@@ -72,7 +72,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.0.0";
+const VER="1.0.1";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -144,7 +144,7 @@ function render(){
   if(!s){a.innerHTML=`<div class="card"><h2>Novo box</h2>
       <input class="scan" id="scan" placeholder="Leia o 1º fardinho do box ou digite o box (P2 R5 23A)" autocomplete="off" autocapitalize="characters" ${ui.kb?'inputmode="text"':'inputmode="none"'}>
       <div class="row" style="margin-top:8px"><button class="btn" type="button" id="bKb">${ui.kb?"Esconder teclado":"⌨ Digitar"}</button><button class="btn" type="button" id="bGo">OK</button><button class="btn pri" type="button" id="bCam">📷 Câmera</button></div>
-      <p class="hint">No coletor, aperte o gatilho com a tela aberta: a leitura entra sozinha neste campo.</p></div>${sessListHTML()}`;wire();focusScan();return}
+      <p class="hint">No coletor, aperte o <b>gatilho lateral</b> com esta tela aberta: a leitura entra sozinha neste campo. Se não entrar, toque uma vez no campo e tente de novo.</p><p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:"Nenhuma leitura recebida ainda."}</p></div>${sessListHTML()}`;wire();focusScan();return}
   const n=sessCount(s),meta=sessMeta(s),pc=meta?Math.min(100,Math.round(n/meta*100)):0,L=IX.lotes.get(s.lote);
   const fl=ui.flash||{c:"idle",t:"Aguardando leitura…"};
   a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="muted">${esc(prodOfLote(s.lote)||"")}</span></div>
@@ -153,6 +153,7 @@ function render(){
      <div class="flash ${n>=meta&&meta?"done":fl.c}">${n>=meta&&meta&&fl.c!=="dup"?"✓ LOTE COMPLETO":fl.t}</div>
      <input class="scan" id="scan" placeholder="Aguardando leitura… (ou digite o nº)" autocomplete="off" ${ui.kb?'inputmode="numeric"':'inputmode="none"'}>
      <div class="row" style="margin-top:8px"><button class="btn" type="button" id="bKb">${ui.kb?"Esconder teclado":"⌨ Digitar"}</button><button class="btn" type="button" id="bGo">OK</button><button class="btn pri" type="button" id="bCam">📷 Câmera</button></div>
+     <p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:""}</p>
      ${L&&L.boxes.length>1?`<p class="hint">Lote também em: ${L.boxes.filter(b=>b[0]!==s.k).map(b=>esc(b[1])).join(", ")}</p>`:""}
    </div>
    <div class="card"><h2>Últimas leituras (${fmt(s.lidos.length)} nesta sessão${s.alertas.length?` · <span style="color:var(--bad)">${s.alertas.length} de outro lote</span>`:""})</h2>
@@ -178,8 +179,20 @@ function wire(){
   on("#bGo",go);
   i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
   // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
-  i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
+  i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
   i.addEventListener("blur",()=>{if(!ui.kb)setTimeout(focusScan,250)})}
+// leitor do coletor: alguns modos colocam o texto no campo sem avisar a página (sem "input"/Enter).
+// Então o campo é vigiado: código completo parado por um instante → processa.
+let _pv="",_pt=0;
+setInterval(()=>{const i=$("#scan");if(!i||ui.lock)return;const v=i.value;if(v!==_pv){_pv=v;_pt=Date.now();if(v)noteRaw(v);return}
+  if(v&&Date.now()-_pt>350&&(/\/00\/\d{18}/.test(v)||v.replace(/\D/g,"").length>=12)){i.value="";_pv="";onRead(v.trim())}},150);
+// modo "Keyboard input" com o foco fora do campo: junta as teclas digitadas rapidamente
+let _kb="",_kt=0,_kto=null;
+document.addEventListener("keydown",e=>{const t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"))return;if(ui.lock)return;
+  if(e.key==="Enter"){if(_kb.length>=6){const v=_kb;_kb="";noteRaw(v);onRead(v)}_kb="";return}
+  if(e.key&&e.key.length===1){const n=Date.now();if(n-_kt>300)_kb="";_kb+=e.key;_kt=n;clearTimeout(_kto);
+    _kto=setTimeout(()=>{if(_kb.length>=12){const v=_kb;_kb="";noteRaw(v);onRead(v)}else _kb=""},350)}},true);
+function noteRaw(v){ui.lastRaw={v:String(v).slice(0,80),t:Date.now()};const e=$("#raw");if(e)e.textContent=`Última leitura recebida: ${ui.lastRaw.v}`}
 
 // ---------- uma leitura ----------
 function onRead(raw){
