@@ -94,7 +94,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.9.2";
+const VER="1.9.3";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -325,7 +325,13 @@ function handleInSession(s,F,P){
     {const ob=outroBox(F,s.k);if(ob){s.alertas.push({p:F.p,n:F.n,lote:F.lote,t:nowISO(),box:ob});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)} já emblocado no BOX ${ob} — não contado`};sDup();render();return}}
     const novo=!divCounts(s).has(F.lote);s.lidos.push({p:F.p,n:F.n,t:nowISO(),l:F.lote});s.fim=nowISO();s.exp=false;saveState();
     ui.flash={c:"ok",t:`✓ P${F.p} ${g3(F.n)} · lote ${F.lote}${novo?" (novo neste box)":""}`};ui.dvLast=F.lote;sOk();render();return}
-  if(!s.lote){if(!F.lote){lockScreen("bad",`<h3>FARDINHO SEM LOTE</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI).</p>`,[["Retirei o fardo — continuar",unlock]]);sBad();return}s.lote=F.lote}
+  if(!s.lote){if(!F.lote){lockScreen("bad",`<h3>FARDINHO SEM LOTE</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI).</p>`,[["Retirei o fardo — continuar",unlock]]);sBad();return}
+    // lote já aberto em outro box: não abre em box novo, manda emblocar no box onde ele já está
+    const ob=lotBoxes(F.lote);if(ob.length&&!ob.some(b=>b[0]===s.k)){sBad();
+      showSheet(`${fardMini(F)}<div class="sbad">Lote <b>${esc(F.lote)}</b> já está aberto no box <b>${ob.map(b=>esc(b[1])).join("</b> e <b>")}</b>. Não é permitido abrir o lote em outro box: emblocar no box onde ele já está.</div>
+        ${ob.map(b=>`<button class="btn pri big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">Emblocar no BOX ${esc(b[1])}</button>`).join("")}<button class="btn big" type="button" data-x>Cancelar</button>`,
+        o=>o.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{closeSheet();if(!s.lidos.length&&!s.alertas.length&&!s.desc.length){S.sessoes=S.sessoes.filter(z=>z!==s);S.atual=null}newSess(b.dataset.k,F)}));return}
+    s.lote=F.lote}
   if(F.lote!==s.lote){s.alertas.push({p:F.p,n:F.n,lote:F.lote||"",t:nowISO()});s.fim=nowISO();saveState();sBad();
     lockScreen("bad",`<h3>⚠ NÃO É DESTE LOTE</h3><p>Fardinho <b>P${F.p} ${g3(F.n)}</b> é do lote</p><div class="lt">${esc(F.lote||"SEM LOTE")}</div><p>${esc(F.lote?prodOfLote(F.lote):"aguardando HVI")}</p><p>Box <b>${esc(s.addr)}</b> está emblocando o lote <b>${esc(s.lote)}</b>.<br><b>Este fardo não foi contado.</b></p>`,[["Retirei o fardo — continuar",unlock]]);return}
   const key=`${F.p}-${F.n}`;
@@ -377,11 +383,9 @@ function startFromFard(F){const L=F.lote?IX.lotes.get(F.lote):null;
   const bx=lotBoxes(F.lote),sp={b:"",r:"",sd:"",k:""};
   showSheet(`${fardMini(F)}<h3 style="margin-top:12px">Em qual box você está emblocando?</h3>
     ${bx.map(b=>`<button class="btn pri big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">Emblocar no BOX ${esc(b[1])}${lotesNoBox(b[0]).length>1?" (diverso)":""}</button>`).join("")}
-    ${bx.length?`<button class="btn big" type="button" id="spOut" style="margin-bottom:8px">Outro box…</button>`:`<p class="hint" style="margin:0 0 8px">Lote novo a emblocar: selecione o box.</p>`}
-    <div id="spBox"${bx.length?' class="hide"':""}></div><button class="btn big" type="button" data-x style="margin-top:8px">Cancelar</button>`,
+    ${bx.length?`<p class="hint" style="margin:0 0 8px">Lote já aberto: emblocar no box onde ele está.</p>`:`<p class="hint" style="margin:0 0 8px">Lote novo a emblocar: selecione o box.</p><div id="spBox"></div>`}<button class="btn big" type="button" data-x style="margin-top:8px">Cancelar</button>`,
     o=>{o.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{closeSheet();newSess(b.dataset.k,F)});
-      const draw=()=>{const c=$("#spBox");c.innerHTML=pkSelects("sp",sp);pkWire("sp",sp,draw);const g=$("#spGo");if(g)g.onclick=()=>{closeSheet();newSess(sp.k,F)};const gd=$("#spDiv");if(gd)gd.onclick=()=>{closeSheet();newSess(sp.k,F,null,true)}};draw();
-      const ou=$("#spOut");if(ou)ou.onclick=()=>{ou.remove();$("#spBox").classList.remove("hide")}})}
+      const draw=()=>{const c=$("#spBox");if(!c)return;c.innerHTML=pkSelects("sp",sp);pkWire("sp",sp,draw);const g=$("#spGo");if(g)g.onclick=()=>{closeSheet();newSess(sp.k,F)};const gd=$("#spDiv");if(gd)gd.onclick=()=>{closeSheet();newSess(sp.k,F,null,true)}};draw();})}
 function startBoxPick(k){const B=IX.boxes.get(k);const ls=B.ls||[];
   if(ls.length===1){newSess(k,null,ls[0]);return}
   if(ls.length>1){newSess(k,null,null,true);return}
