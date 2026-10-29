@@ -91,7 +91,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.8.0";
+const VER="1.8.1";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -188,6 +188,8 @@ function boxTree(){if(IX._tree)return IX._tree;const T=new Map();
   for(const R of T.values())for(const x of R.values()){x.A.sort((a,b)=>a.n-b.n);x.B.sort((a,b)=>a.n-b.n)}
   return IX._tree=T}
 const patNome=bid=>{const P=(PAC.patios||[]).find(x=>x[0]===bid);if(P)return `${P[1]}${P[2]?" · "+P[2]:""}`;const B=[...IX.boxes.values()].find(x=>x.k.split("|")[1]===bid);return B?B.addr.split("-")[0]:bid};
+// nº do box como na aba Campo: "1A" (com quadra: "Q2 · 3A")
+const boxCurto=a=>{const p=String(a).split("-"),q=p.find(x=>/^Q\d+$/.test(x));return (q?q+" · ":"")+p[p.length-1]};
 const boxTag=B=>B.ls&&B.ls.length?(B.ls.length>1?`${B.ls.length} lotes`:`lote ${B.ls[0]}`)+(B.mat?` + ${B.mat}`:""):B.mat?B.mat:"livre";
 function pkSelects(x,pk){const T=boxTree(),R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(+pk.r),L=X&&pk.sd?X[pk.sd]:[];
   const opt=(v,t,sel)=>`<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`,B=pk.k&&IX.boxes.get(pk.k);
@@ -195,7 +197,7 @@ function pkSelects(x,pk){const T=boxTree(),R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(
     <div><span>Pátio</span><select id="${x}B">${opt("","Selecione",!pk.b)}${[...T.keys()].map(b=>opt(b,patNome(b),pk.b===b)).join("")}</select></div>
     <div><span>Rua</span><select id="${x}R"${R?"":" disabled"}>${opt("","—",!pk.r)}${R?[...R.keys()].sort((a,b)=>a-b).map(r=>opt(r,"Rua "+r,+pk.r===r)).join(""):""}</select></div>
     <div><span>Lado</span><select id="${x}S"${X?"":" disabled"}>${opt("","—",!pk.sd)}${X?["A","B"].filter(z=>X[z].length).map(z=>opt(z,"Lado "+z,pk.sd===z)).join(""):""}</select></div>
-    <div><span>Box</span><select id="${x}K"${L.length?"":" disabled"}>${opt("","—",!pk.k)}${L.map(x2=>opt(x2.k,`${x2.addr.split("-").slice(1).join("-")} · ${boxTag(x2)}`,pk.k===x2.k)).join("")}</select></div></div>
+    <div><span>Box</span><select id="${x}K"${L.length?"":" disabled"}>${opt("","—",!pk.k)}${L.map(x2=>opt(x2.k,`${boxCurto(x2.addr)} · ${boxTag(x2)}`,pk.k===x2.k)).join("")}</select></div></div>
     ${B?`<div class="pkb"><b>BOX ${esc(B.addr)}</b><span>${esc(boxTag(B))}</span></div><button class="btn pri big" type="button" id="${x}Go">Emblocar neste box</button>`:""}`}
 function pkWire(x,pk,redraw){const sel=(id,f)=>{const e=$("#"+x+id);if(e)e.onchange=()=>{f(e.value);redraw()}};
   sel("B",v=>{pk.b=v;pk.r="";pk.sd="";pk.k=""});sel("R",v=>{pk.r=v;pk.sd="";pk.k=""});sel("S",v=>{pk.sd=v;pk.k=""});sel("K",v=>{pk.k=v})}
