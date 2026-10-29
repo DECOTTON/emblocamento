@@ -94,7 +94,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.9.0";
+const VER="1.9.1";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -122,7 +122,11 @@ function buildIndex(P){
   for(let i=0;i<F.length;i+=st){const p=F[i],n=F[i+1];f.set(p*1e7+n,i);const a=byN.get(n);if(a)a.push(p);else byN.set(n,[p])}
   const lotes=new Map();for(const[c,prod,qtd,exp,expd,bx,dexp,cli,emb]of P.lotes)lotes.set(String(c),{c:String(c),prod,qtd,exp,expd:!!expd,boxes:bx,dexp:dexp||"",cli:cli||"",emb:emb??null});
   const boxes=new Map(),byAddr=new Map();for(const[k,addr,mat,ls]of P.boxes){boxes.set(k,{k,addr,mat,ls});byAddr.set(normAddr(addr),k)}
-  return{f,byN,lotes,boxes,byAddr,st}}
+  // qtd. emblocada de cada lote em cada box (contagem do app principal, inclusive a visual)
+  const qbox=new Map();for(const L of lotes.values())for(const[k,,q]of L.boxes||[])if(q!=null&&q!=="")qbox.set(L.c+"|"+k,+q||0);
+  // fardinho já lido (importado) em algum box: "p-n" → chave do box
+  const lidoEm=new Map();for(const[key,arr]of Object.entries(P.lidos||{})){const k=key.slice(key.indexOf("|")+1);for(const v of arr)lidoEm.set(v,k)}
+  return{f,byN,lotes,boxes,byAddr,st,qbox,lidoEm}}
 const nFard=P=>Math.round(P.f.length/(P.fs||3));
 const rowLote=ri=>{const li=PAC.f[ri+2];return li>=0?PAC.lc[li]:""};
 const rowDate=(ri,o)=>{if(!PAC.dd||(PAC.fs||3)<5)return"";return PAC.dd[PAC.f[ri+o]]||""};
@@ -158,9 +162,17 @@ const cur=()=>S.sessoes.find(s=>s.id===S.atual)||null;
 const prevLidos=(lote,k)=>new Set((PAC&&PAC.lidos&&PAC.lidos[lote+"|"+k])||[]);
 // box de diversos: lote de cada leitura fica em x.l; contagem por lote
 const lotesNoBox=k=>{const B=IX.boxes.get(k);return B&&B.ls?B.ls.map(String):[]};
-function divCounts(s){const M=new Map();for(const c of lotesNoBox(s.k))M.set(c,new Set(prevLidos(c,s.k)));
-  for(const x of s.lidos){const c=x.l||s.lote;if(!c)continue;if(!M.has(c))M.set(c,new Set(prevLidos(c,s.k)));M.get(c).add(`${x.p}-${x.n}`)}return M}
-function sessCount(s){if(s.div){let n=0;for(const v of divCounts(s).values())n+=v.size;return n}const all=new Set([...prevLidos(s.lote,s.k),...s.lidos.map(x=>`${x.p}-${x.n}`)]);return all.size}
+// contagem visual: fardos lançados à mão no app principal além dos lidos pela etiqueta (somam com as leituras)
+const visBase=(c,k)=>{const q=IX.qbox.get(c+"|"+k);return q==null?0:Math.max(0,q-prevLidos(c,k).size)};
+const dvN=v=>v.set.size+v.base;
+function divCounts(s){const M=new Map(),add=c=>{if(!M.has(c))M.set(c,{set:new Set(prevLidos(c,s.k)),base:visBase(c,s.k)});return M.get(c)};
+  for(const c of lotesNoBox(s.k))add(c);
+  for(const x of s.lidos){const c=x.l||s.lote;if(!c)continue;add(c).set.add(`${x.p}-${x.n}`)}return M}
+// fardinho já emblocado em OUTRO box (importado no app principal ou lido neste aparelho) → endereço do box
+function outroBox(F,k){const key=`${F.p}-${F.n}`,ik=IX.lidoEm.get(key);if(ik&&ik!==k){const B=IX.boxes.get(ik);return B?B.addr:ik}
+  for(const z of S.sessoes){if(z.k===k)continue;if(z.lidos.some(x=>x.p===F.p&&x.n===F.n))return z.addr}return null}
+function sessCount(s){if(s.div){let n=0;for(const v of divCounts(s).values())n+=dvN(v);return n}
+  if(s.lote){const all=new Set([...prevLidos(s.lote,s.k),...s.lidos.map(x=>`${x.p}-${x.n}`)]);return all.size+visBase(s.lote,s.k)}const all=new Set([...prevLidos(s.lote,s.k),...s.lidos.map(x=>`${x.p}-${x.n}`)]);return all.size}
 function sessMeta(s){const L=IX&&IX.lotes.get(s.lote);if(L&&L.qtd)return Math.max(0,L.qtd-(L.exp||0))||L.qtd;return PAC?PAC.cap||130:130}
 function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
 
@@ -189,7 +201,7 @@ function render(){
      <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
   wire();focusScan()}
 // tela do box de diversos: lotes e quantidades emblocadas neste box
-function renderDiv(a,s){const M=divCounts(s),fl=ui.flash||{c:"idle",t:"Leia os fardinhos (qualquer lote)"},tot=[...M.values()].reduce((t,v)=>t+v.size,0);
+function renderDiv(a,s){const M=divCounts(s),fl=ui.flash||{c:"idle",t:"Leia os fardinhos (qualquer lote)"},tot=[...M.values()].reduce((t,v)=>t+dvN(v),0);
   const inBox=new Set(lotesNoBox(s.k)),rows=[...M.entries()].sort((x,y)=>String(x[0]).localeCompare(String(y[0]),"pt-BR",{numeric:true}));
   const ses=new Map();for(const x of s.lidos)ses.set(x.l,(ses.get(x.l)||0)+1);
   a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="dvb">BOX DIVERSO</span></div>
@@ -197,7 +209,7 @@ function renderDiv(a,s){const M=divCounts(s),fl=ui.flash||{c:"idle",t:"Leia os f
      <div class="flash ${fl.c}">${fl.t}</div>
      <table class="dvt"><thead><tr><th>Lote / produtor</th><th style="text-align:right">Emblocados</th></tr></thead><tbody>
      ${rows.map(([c,v])=>{const L=IX.lotes.get(c),sd=L&&L.qtd!=null?Math.max(0,L.qtd-(L.exp||0)):null,n=ses.get(c)||0;
-       return `<tr${c===ui.dvLast?' class="hl"':""}><td><b style="font-size:18px">${esc(c)}</b> <small class="muted">${esc(prodOfLote(c)||"")}</small>${inBox.has(c)?"":` <span class="tag warn">novo no box</span>`}<br><small class="muted">${n?`+${fmt(n)} nesta leitura`:"nenhum lido agora"}${sd!=null?` · saldo do lote ${fmt(sd)}`:""}</small></td><td class="q">${fmt(v.size)}<small> fd</small></td></tr>`}).join("")||`<tr><td colspan="2" class="muted">Nenhum lote ainda: leia o 1º fardinho.</td></tr>`}
+       return `<tr${c===ui.dvLast?' class="hl"':""}><td><b style="font-size:18px">${esc(c)}</b> <small class="muted">${esc(prodOfLote(c)||"")}</small>${inBox.has(c)?"":` <span class="tag warn">novo no box</span>`}<br><small class="muted">${n?`+${fmt(n)} nesta leitura`:"nenhum lido agora"}${v.base?` · ${fmt(v.base)} da contagem visual`:""}${sd!=null?` · saldo do lote ${fmt(sd)}`:""}</small></td><td class="q">${fmt(dvN(v))}<small> fd</small></td></tr>`}).join("")||`<tr><td colspan="2" class="muted">Nenhum lote ainda: leia o 1º fardinho.</td></tr>`}
      </tbody></table>
      <p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:""}</p>
      <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
@@ -310,6 +322,7 @@ function handleInSession(s,F,P){
     if(!F.lote){s.alertas.push({p:F.p,n:F.n,lote:"",t:nowISO()});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)}: fardinho sem lote (aguardando HVI) — não contado`};sDup();render();return}
     if(L&&L.expd){s.alertas.push({p:F.p,n:F.n,lote:F.lote,t:nowISO()});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)}: lote ${F.lote} já expedido — não contado`};sDup();render();return}
     if(prevLidos(F.lote,s.k).has(`${F.p}-${F.n}`)||s.lidos.some(x=>x.p===F.p&&x.n===F.n)){ui.flash={c:"dup",t:`Já lido: P${F.p} ${g3(F.n)} (não contou de novo)`};sDup();render();return}
+    {const ob=outroBox(F,s.k);if(ob){s.alertas.push({p:F.p,n:F.n,lote:F.lote,t:nowISO(),box:ob});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)} já emblocado no BOX ${ob} — não contado`};sDup();render();return}}
     const novo=!divCounts(s).has(F.lote);s.lidos.push({p:F.p,n:F.n,t:nowISO(),l:F.lote});s.fim=nowISO();s.exp=false;saveState();
     ui.flash={c:"ok",t:`✓ P${F.p} ${g3(F.n)} · lote ${F.lote}${novo?" (novo neste box)":""}`};ui.dvLast=F.lote;sOk();render();return}
   if(!s.lote){if(!F.lote){lockScreen("bad",`<h3>FARDINHO SEM LOTE</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI).</p>`,[["Retirei o fardo — continuar",unlock]]);sBad();return}s.lote=F.lote}
@@ -317,6 +330,7 @@ function handleInSession(s,F,P){
     lockScreen("bad",`<h3>⚠ NÃO É DESTE LOTE</h3><p>Fardinho <b>P${F.p} ${g3(F.n)}</b> é do lote</p><div class="lt">${esc(F.lote||"SEM LOTE")}</div><p>${esc(F.lote?prodOfLote(F.lote):"aguardando HVI")}</p><p>Box <b>${esc(s.addr)}</b> está emblocando o lote <b>${esc(s.lote)}</b>.<br><b>Este fardo não foi contado.</b></p>`,[["Retirei o fardo — continuar",unlock]]);return}
   const key=`${F.p}-${F.n}`;
   if(prevLidos(s.lote,s.k).has(key)||s.lidos.some(x=>x.p===F.p&&x.n===F.n)){ui.flash={c:"dup",t:`Já lido: P${F.p} ${g3(F.n)} (não contou de novo)`};sDup();render();return}
+  {const ob=outroBox(F,s.k);if(ob){s.alertas.push({p:F.p,n:F.n,lote:F.lote,t:nowISO(),box:ob});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)} já emblocado no BOX ${ob} — não contado`};sDup();render();return}}
   s.lidos.push({p:F.p,n:F.n,t:nowISO()});s.fim=nowISO();s.exp=false;saveState();
   const n=sessCount(s),meta=sessMeta(s);
   ui.flash={c:"ok",t:`✓ P${F.p} ${g3(F.n)}`};sOk();if(meta&&n===meta)setTimeout(()=>{beep(1500,120,3);vib([100,60,100])},150);
