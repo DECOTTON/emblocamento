@@ -31,7 +31,10 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .scan::placeholder{font:500 15px system-ui,sans-serif;color:#6B7774;-webkit-text-fill-color:#6B7774}
 .hint{font-size:13px;color:var(--mut);margin:6px 0 0}
 .muted{color:var(--mut)}
-.lst{list-style:none;margin:0;padding:0}.lst li{border-top:1px solid var(--line);padding:9px 2px;display:flex;gap:8px;align-items:center}.lst li:first-child{border-top:0}
+.lst{list-style:none;margin:0;padding:0}
+.dvt{width:100%;border-collapse:collapse;margin-top:6px}.dvt th{font-size:11px;color:var(--mut);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}.dvt td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.dvt td.q{text-align:right;font:900 22px/1 system-ui,sans-serif;white-space:nowrap}.dvt td.q small{font-size:12px;font-weight:600;color:var(--mut)}.dvt tr.hl td{background:#DDF3E3}
+.dvb{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;background:#5E35B1;color:#fff;border-radius:5px;padding:2px 8px;vertical-align:middle}.lst li{border-top:1px solid var(--line);padding:9px 2px;display:flex;gap:8px;align-items:center}.lst li:first-child{border-top:0}
 .lst li b{font-size:17px}.lst li .r{margin-left:auto;text-align:right}
 .pill{display:inline-block;font-weight:800;background:#EEF1F0;border:1px solid var(--line);border-radius:6px;padding:1px 8px}
 .sess-h{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
@@ -91,7 +94,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.8.4";
+const VER="1.9.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -153,7 +156,11 @@ const sOk=()=>{beep(1250,70);vib(40)},sDup=()=>{beep(600,120,2);vib([60,60,60])}
 // ---------- sessões ----------
 const cur=()=>S.sessoes.find(s=>s.id===S.atual)||null;
 const prevLidos=(lote,k)=>new Set((PAC&&PAC.lidos&&PAC.lidos[lote+"|"+k])||[]);
-function sessCount(s){const all=new Set([...prevLidos(s.lote,s.k),...s.lidos.map(x=>`${x.p}-${x.n}`)]);return all.size}
+// box de diversos: lote de cada leitura fica em x.l; contagem por lote
+const lotesNoBox=k=>{const B=IX.boxes.get(k);return B&&B.ls?B.ls.map(String):[]};
+function divCounts(s){const M=new Map();for(const c of lotesNoBox(s.k))M.set(c,new Set(prevLidos(c,s.k)));
+  for(const x of s.lidos){const c=x.l||s.lote;if(!c)continue;if(!M.has(c))M.set(c,new Set(prevLidos(c,s.k)));M.get(c).add(`${x.p}-${x.n}`)}return M}
+function sessCount(s){if(s.div){let n=0;for(const v of divCounts(s).values())n+=v.size;return n}const all=new Set([...prevLidos(s.lote,s.k),...s.lidos.map(x=>`${x.p}-${x.n}`)]);return all.size}
 function sessMeta(s){const L=IX&&IX.lotes.get(s.lote);if(L&&L.qtd)return Math.max(0,L.qtd-(L.exp||0))||L.qtd;return PAC?PAC.cap||130:130}
 function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
 
@@ -167,6 +174,7 @@ function render(){
     <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>`;wire();return}
   const s=cur();
   if(!s){a.innerHTML=`${pickHTML()}`;wire();wirePick();focusScan();return}
+  if(s.div){renderDiv(a,s);return}
   const n=sessCount(s),meta=sessMeta(s),pc=meta?Math.min(100,Math.round(n/meta*100)):0,L=IX.lotes.get(s.lote);
   const fl=ui.flash||{c:"idle",t:"Aguardando leitura…"};
   a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="muted">${esc(prodOfLote(s.lote)||"")}</span></div>
@@ -178,6 +186,20 @@ function render(){
    </div>
    <div class="card"><h2>Últimas leituras (${fmt(s.lidos.length)} nesta sessão${s.alertas.length?` · <span style="color:var(--bad)">${s.alertas.length} de outro lote</span>`:""})</h2>
      <ul class="lst">${s.lidos.slice(-8).reverse().map(x=>`<li><span class="tag ok">✓</span><b>P${x.p} ${g3(x.n)}</b><span class="r muted">${new Date(x.t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></li>`).join("")||`<li class="muted">Nenhuma leitura ainda.</li>`}</ul>
+     <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
+  wire();focusScan()}
+// tela do box de diversos: lotes e quantidades emblocadas neste box
+function renderDiv(a,s){const M=divCounts(s),fl=ui.flash||{c:"idle",t:"Leia os fardinhos (qualquer lote)"},tot=[...M.values()].reduce((t,v)=>t+v.size,0);
+  const inBox=new Set(lotesNoBox(s.k)),rows=[...M.entries()].sort((x,y)=>String(x[0]).localeCompare(String(y[0]),"pt-BR",{numeric:true}));
+  const ses=new Map();for(const x of s.lidos)ses.set(x.l,(ses.get(x.l)||0)+1);
+  a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="dvb">BOX DIVERSO</span></div>
+     <div style="display:flex;align-items:center;gap:12px;margin-top:6px"><div class="muted" style="font-size:13px;font-weight:700;line-height:1.3">${fmt(M.size)} lote(s)<br>no box</div><div style="flex:1"><div class="cnt">${fmt(tot)}<small style="font-size:20px"> fardos</small></div></div></div>
+     <div class="flash ${fl.c}">${fl.t}</div>
+     <table class="dvt"><thead><tr><th>Lote / produtor</th><th style="text-align:right">Emblocados</th></tr></thead><tbody>
+     ${rows.map(([c,v])=>{const L=IX.lotes.get(c),sd=L&&L.qtd!=null?Math.max(0,L.qtd-(L.exp||0)):null,n=ses.get(c)||0;
+       return `<tr${c===ui.dvLast?' class="hl"':""}><td><b style="font-size:18px">${esc(c)}</b> <small class="muted">${esc(prodOfLote(c)||"")}</small>${inBox.has(c)?"":` <span class="tag warn">novo no box</span>`}<br><small class="muted">${n?`+${fmt(n)} nesta leitura`:"nenhum lido agora"}${sd!=null?` · saldo do lote ${fmt(sd)}`:""}</small></td><td class="q">${fmt(v.size)}<small> fd</small></td></tr>`}).join("")||`<tr><td colspan="2" class="muted">Nenhum lote ainda: leia o 1º fardinho.</td></tr>`}
+     </tbody></table>
+     <p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:""}</p>
      <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
   wire();focusScan()}
 // ---------- selecionar box (pátio › rua › lado › box), como na aba Campo do app principal ----------
@@ -198,7 +220,7 @@ function pkSelects(x,pk){const T=boxTree(),R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(
     <div><span>Rua</span><select id="${x}R"${R?"":" disabled"}>${opt("","—",!pk.r)}${R?[...R.keys()].sort((a,b)=>a-b).map(r=>opt(r,"Rua "+r,+pk.r===r)).join(""):""}</select></div>
     <div><span>Lado</span><select id="${x}S"${X?"":" disabled"}>${opt("","—",!pk.sd)}${X?["A","B"].filter(z=>X[z].length).map(z=>opt(z,"Lado "+z,pk.sd===z)).join(""):""}</select></div>
     <div><span>Box</span><select id="${x}K"${L.length?"":" disabled"}>${opt("","—",!pk.k)}${L.map(x2=>opt(x2.k,`${boxCurto(x2.addr)} · ${boxTag(x2)}`,pk.k===x2.k)).join("")}</select></div></div>
-    ${B?`<div class="pkb"><b>BOX ${esc(B.addr)}</b><span>${esc(boxTag(B))}</span></div><button class="btn pri big" type="button" id="${x}Go">Emblocar neste box</button>`:""}`}
+    ${B?`<div class="pkb"><b>BOX ${esc(B.addr)}</b><span>${esc(boxTag(B))}</span></div><button class="btn pri big" type="button" id="${x}Go">${B.ls&&B.ls.length>1?"Emblocar neste box diverso":"Emblocar lote neste box"}</button>${!(B.ls&&B.ls.length)?`<button class="btn big" type="button" id="${x}Div" style="margin-top:8px;border-color:#5E35B1;color:#5E35B1">Emblocar lote diverso neste box</button>`:""}`:""}`}
 function pkWire(x,pk,redraw){const sel=(id,f)=>{const e=$("#"+x+id);if(e)e.onchange=()=>{f(e.value);redraw()}};
   sel("B",v=>{pk.b=v;pk.r="";pk.sd="";pk.k=""});sel("R",v=>{pk.r=v;pk.sd="";pk.k=""});sel("S",v=>{pk.sd=v;pk.k=""});sel("K",v=>{pk.k=v})}
 function pickHTML(){const pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});
@@ -221,17 +243,18 @@ function wirePick(){const pk=ui.pk;pkWire("pk",pk,()=>{ui.pkMsg="";render()});
     fm.onsubmit=e=>{e.preventDefault();go()};li.addEventListener("keyup",e=>{if(e.key==="Enter"||e.keyCode===13){e.preventDefault();go()}})}
   document.querySelectorAll("[data-pkk]").forEach(a=>a.onclick=e=>{e.preventDefault();const k=a.dataset.pkk,[,b,r,pos]=k.split("|");ui.pk={b,r:String(+r),sd:+pos%2?"A":"B",k};render()});
   const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.kbOff=false;ui.pk={b:"",r:"",sd:"",k:""};ui.pkLote="";ui.pkMsg="";const i=$("#scan");if(i)i.value="";render();focusScan()};
-  const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
+  const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()};
+  const gd=$("#pkDiv");if(gd)gd.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};newSess(k,null,null,true);focusScan()}}
 // leituras no aparelho (pelo Menu)
 function openLeituras(){showSheet(`${sessListHTML()}<button class="btn big" type="button" data-x>Fechar</button>`,o=>{
   o.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();closeSheet();render();focusScan()});
   o.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const z=S.sessoes.find(x=>x.id===b.dataset.del);if(!z)return;
-    if(!confirm(`Remover as ${z.lidos.length} leitura(s) do box ${z.addr} (lote ${z.lote||"?"})? Elas não serão exportadas.`))return;
+    if(!confirm(`Remover as ${z.lidos.length} leitura(s) do box ${z.addr} (${z.div?"box diverso":"lote "+(z.lote||"?")})? Elas não serão exportadas.`))return;
     S.sessoes=S.sessoes.filter(x=>x!==z);if(S.atual===z.id)S.atual=null;saveState();closeSheet();render();openLeituras();toast("Leituras removidas")});
   const e=o.querySelector("#bExp");if(e)e.onclick=()=>{closeSheet();exportar()}})}
 function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.inicio).localeCompare(String(a.fim||a.inicio)));
   const pend=L.filter(s=>!s.exp).length;
-  return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button>${s.exp?"":` <button class="btn" type="button" data-del="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px;color:var(--bad)" title="Remover estas leituras">🗑</button>`}</span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
+  return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · ${s.div?`<span class="dvb">DIVERSO</span> ${fmt(new Set(s.lidos.map(x=>x.l)).size)} lote(s)`:`lote <span class="pill">${esc(s.lote||"?")}</span>`}<br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button>${s.exp?"":` <button class="btn" type="button" data-del="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px;color:var(--bad)" title="Remover estas leituras">🗑</button>`}</span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
     ${L.length?`<button class="btn ${pend?"pri":""} big" type="button" id="bExp" style="margin-top:10px">⤓ Exportar leituras${pend?` (${pend} pendente${pend>1?"s":""})`:""}</button>`:""}</div>`}
 function focusScan(){const i=$("#scan");if(ui.kbOff)return;if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&document.activeElement!==i){try{i.focus({preventScroll:true})}catch(e){i.focus()}}}
 function wire(){
@@ -277,11 +300,18 @@ function onRead(raw){
   if(!F){// fora do pacote
     if(!s){sDup();showSheet(`<h3>Fardinho P${P.prensa||"?"} ${g3(P.num)} não está no pacote</h3><p>Provavelmente foi classificado depois da última sincronização. Sincronize (baixe um pacote novo) ou comece pelo endereço do box.</p><button class="btn pri big" type="button" data-x>OK</button>`);return}
     s.desc.push({p:P.prensa||0,n:P.num,t:nowISO()});saveState();
+    if(s.div){ui.flash={c:"dup",t:`P${P.prensa||"?"} ${g3(P.num)} fora do pacote — não contado (baixe um pacote novo)`};sDup();render();return}
     lockScreen("warn",`<h3>⚠ FARDINHO FORA DO PACOTE</h3><p>P${P.prensa||"?"} ${g3(P.num)} não está no pacote deste aparelho (classificado depois da última sincronização?).</p><p><b>Não foi contado.</b> Confira na sincronização.</p>`,[["Entendi — continuar",unlock]]);return}
   if(F.amb){showSheet(`<h3>Nº ${g3(P.num)} existe nas prensas ${F.amb.map(x=>x.p).join(" e ")}</h3><p>Qual é a deste fardinho?</p>${F.amb.map(x=>`<button class="btn big" type="button" data-amb="${x.p}" style="margin-bottom:8px">Prensa ${x.p} · lote ${esc(x.lote||"sem lote")}</button>`).join("")}`,o=>o.querySelectorAll("[data-amb]").forEach(b=>b.onclick=()=>{closeSheet();const F2=F.amb.find(x=>String(x.p)===b.dataset.amb);const s2=cur();if(s2)handleInSession(s2,F2,P);else startFromFard(F2)}));return}
   if(!s){startFromFard(F);return}
   handleInSession(s,F,P)}
 function handleInSession(s,F,P){
+  if(s.div){const L=F.lote?IX.lotes.get(F.lote):null;
+    if(!F.lote){s.alertas.push({p:F.p,n:F.n,lote:"",t:nowISO()});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)}: fardinho sem lote (aguardando HVI) — não contado`};sDup();render();return}
+    if(L&&L.expd){s.alertas.push({p:F.p,n:F.n,lote:F.lote,t:nowISO()});saveState();ui.flash={c:"dup",t:`P${F.p} ${g3(F.n)}: lote ${F.lote} já expedido — não contado`};sDup();render();return}
+    if(prevLidos(F.lote,s.k).has(`${F.p}-${F.n}`)||s.lidos.some(x=>x.p===F.p&&x.n===F.n)){ui.flash={c:"dup",t:`Já lido: P${F.p} ${g3(F.n)} (não contou de novo)`};sDup();render();return}
+    const novo=!divCounts(s).has(F.lote);s.lidos.push({p:F.p,n:F.n,t:nowISO(),l:F.lote});s.fim=nowISO();s.exp=false;saveState();
+    ui.flash={c:"ok",t:`✓ P${F.p} ${g3(F.n)} · lote ${F.lote}${novo?" (novo neste box)":""}`};ui.dvLast=F.lote;sOk();render();return}
   if(!s.lote){if(!F.lote){lockScreen("bad",`<h3>FARDINHO SEM LOTE</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI).</p>`,[["Retirei o fardo — continuar",unlock]]);sBad();return}s.lote=F.lote}
   if(F.lote!==s.lote){s.alertas.push({p:F.p,n:F.n,lote:F.lote||"",t:nowISO()});s.fim=nowISO();saveState();sBad();
     lockScreen("bad",`<h3>⚠ NÃO É DESTE LOTE</h3><p>Fardinho <b>P${F.p} ${g3(F.n)}</b> é do lote</p><div class="lt">${esc(F.lote||"SEM LOTE")}</div><p>${esc(F.lote?prodOfLote(F.lote):"aguardando HVI")}</p><p>Box <b>${esc(s.addr)}</b> está emblocando o lote <b>${esc(s.lote)}</b>.<br><b>Este fardo não foi contado.</b></p>`,[["Retirei o fardo — continuar",unlock]]);return}
@@ -332,19 +362,24 @@ function startFromFard(F){const L=F.lote?IX.lotes.get(F.lote):null;
   if(!F.lote||(L&&L.expd)){sBad();showSheet(`${fardMini(F)}<div class="sbad">${!F.lote?"Fardinho ainda <b>sem lote</b> (aguardando HVI). Comece por outro fardinho.":`Lote <b>${esc(F.lote)}</b> já <b>expedido</b>. Confira o fardinho.`}</div><button class="btn pri big" type="button" data-x>OK</button>`);return}
   const bx=lotBoxes(F.lote),sp={b:"",r:"",sd:"",k:""};
   showSheet(`${fardMini(F)}<h3 style="margin-top:12px">Em qual box você está emblocando?</h3>
-    ${bx.map(b=>`<button class="btn pri big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">Emblocar no BOX ${esc(b[1])}</button>`).join("")}
+    ${bx.map(b=>`<button class="btn pri big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">Emblocar no BOX ${esc(b[1])}${lotesNoBox(b[0]).length>1?" (diverso)":""}</button>`).join("")}
     ${bx.length?`<button class="btn big" type="button" id="spOut" style="margin-bottom:8px">Outro box…</button>`:`<p class="hint" style="margin:0 0 8px">Lote novo a emblocar: selecione o box.</p>`}
     <div id="spBox"${bx.length?' class="hide"':""}></div><button class="btn big" type="button" data-x style="margin-top:8px">Cancelar</button>`,
     o=>{o.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{closeSheet();newSess(b.dataset.k,F)});
-      const draw=()=>{const c=$("#spBox");c.innerHTML=pkSelects("sp",sp);pkWire("sp",sp,draw);const g=$("#spGo");if(g)g.onclick=()=>{closeSheet();newSess(sp.k,F)}};draw();
+      const draw=()=>{const c=$("#spBox");c.innerHTML=pkSelects("sp",sp);pkWire("sp",sp,draw);const g=$("#spGo");if(g)g.onclick=()=>{closeSheet();newSess(sp.k,F)};const gd=$("#spDiv");if(gd)gd.onclick=()=>{closeSheet();newSess(sp.k,F,null,true)}};draw();
       const ou=$("#spOut");if(ou)ou.onclick=()=>{ou.remove();$("#spBox").classList.remove("hide")}})}
 function startBoxPick(k){const B=IX.boxes.get(k);const ls=B.ls||[];
   if(ls.length===1){newSess(k,null,ls[0]);return}
+  if(ls.length>1){newSess(k,null,null,true);return}
   newSess(k,null,null);ui.flash={c:"idle",t:ls.length?`Box com ${ls.length} lotes (${ls.join(", ")}): leia o 1º fardinho para definir o lote`:"Leia o 1º fardinho para definir o lote"};render()}
-function newSess(k,F,lote){ui.kbOff=false;const B=IX.boxes.get(k);
-  // continua a sessão aberta do mesmo box + lote, se houver
-  const lt=F?F.lote:lote;let s=S.sessoes.find(z=>z.k===k&&z.lote===lt&&!z.exp&&lt);
-  if(!s){s={id:uid(),k,addr:B?B.addr:k,lote:lt||"",inicio:nowISO(),fim:null,lidos:[],alertas:[],desc:[],exp:false};S.sessoes.push(s)}
+function newSess(k,F,lote,div){ui.kbOff=false;const B=IX.boxes.get(k);
+  // box com mais de um lote = box de diversos (aceita fardinho de qualquer lote, conta por lote)
+  if(!div&&lotesNoBox(k).length>1)div=true;
+  const lt=F?F.lote:lote;let s;
+  if(div){s=S.sessoes.find(z=>z.k===k&&z.div&&!z.exp);if(!s){s={id:uid(),k,addr:B?B.addr:k,lote:"",div:true,inicio:nowISO(),fim:null,lidos:[],alertas:[],desc:[],exp:false};S.sessoes.push(s)}}
+  else{// continua a sessão aberta do mesmo box + lote, se houver
+  s=S.sessoes.find(z=>z.k===k&&z.lote===lt&&!z.exp&&lt);
+  if(!s){s={id:uid(),k,addr:B?B.addr:k,lote:lt||"",inicio:nowISO(),fim:null,lidos:[],alertas:[],desc:[],exp:false};S.sessoes.push(s)}}
   S.atual=s.id;ui.flash=null;saveState();render();if(F)handleInSession(s,F,null)}
 
 // ---------- tela travada (alerta) e folhas ----------
@@ -377,7 +412,7 @@ $("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target
   try{const j=JSON.parse(await f.text());if(j.tipo!=="rsp-coletor-pacote")throw 0;
     PAC=j;IX=buildIndex(j);await DB.set("pacote",j);
     // leituras que já entraram no sistema (estão no pacote novo) saem do aparelho
-    let rem=0;for(const s of S.sessoes){const pv=prevLidos(s.lote,s.k),n0=s.lidos.length;s.lidos=s.lidos.filter(x=>!pv.has(`${x.p}-${x.n}`));rem+=n0-s.lidos.length}
+    let rem=0;for(const s of S.sessoes){const n0=s.lidos.length;s.lidos=s.lidos.filter(x=>!prevLidos(x.l||s.lote,s.k).has(`${x.p}-${x.n}`));rem+=n0-s.lidos.length}
     S.sessoes=S.sessoes.filter(s=>s.lidos.length||s.alertas.length&&!s.exp||s.id===S.atual);if(!cur())S.atual=null;await saveState();
     render();toast(`Pacote carregado: ${fmt(nFard(j))} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
   catch(err){toast("Arquivo inválido: escolha o pacote-coletor-… gerado no app principal.",4000)}};
@@ -385,7 +420,11 @@ $("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target
 // ---------- exportar leituras ----------
 // exportar: "Salvar no Google Drive" (compartilhar → Drive) ou salvar no aparelho (Downloads)
 function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.length||s.desc.length);if(!ss.length){toast("Nenhuma leitura para exportar.");return}
-  const j={tipo:"rsp-coletor-leituras",v:1,disp:S.disp||"",app:VER,exportado:nowISO(),pacote:PAC?PAC.gerado:null,sessoes:ss.map(s=>({k:s.k,addr:s.addr,lote:s.lote,inicio:s.inicio,fim:s.fim,lidos:s.lidos,alertas:s.alertas,desc:s.desc}))};
+  const j={tipo:"rsp-coletor-leituras",v:1,disp:S.disp||"",app:VER,exportado:nowISO(),pacote:PAC?PAC.gerado:null,sessoes:ss.flatMap(s=>{if(!s.div)return[{k:s.k,addr:s.addr,lote:s.lote,inicio:s.inicio,fim:s.fim,lidos:s.lidos,alertas:s.alertas,desc:s.desc}];
+    // box de diversos: uma sessão por lote (o app principal grava a qtd. de cada lote neste box)
+    const G=new Map();for(const x of s.lidos){const c=x.l||"";if(!G.has(c))G.set(c,[]);G.get(c).push({p:x.p,n:x.n,t:x.t})}
+    const out=[...G.entries()].map(([c,l],i)=>({k:s.k,addr:s.addr,lote:c,div:true,inicio:s.inicio,fim:s.fim,lidos:l,alertas:i?[]:s.alertas,desc:i?[]:s.desc}));
+    return out.length?out:[{k:s.k,addr:s.addr,lote:"",div:true,inicio:s.inicio,fim:s.fim,lidos:[],alertas:s.alertas,desc:s.desc}]})};
   const d=new Date(),p=n=>String(n).padStart(2,"0"),name=`leituras-coletor-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.txt`;
   const blob=new Blob([JSON.stringify(j)],{type:"text/plain"});let file=null,canSh=false;
   try{file=new File([blob],name,{type:"text/plain"});canSh=!!(navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){}
