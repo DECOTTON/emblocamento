@@ -91,7 +91,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.8.4";
+const VER="1.8.5";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -243,14 +243,19 @@ function wire(){
   document.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();render()});
 }
 // campo de leitura fixo (nunca é recriado: o teclado do coletor continua aberto entre as leituras)
-(()=>{const i=$("#scan");let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";_pv="";if(v)onRead(v)};
-  $("#bGo").onclick=go;$("#bCam").onclick=openCam;
-  i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
+(()=>{const i=$("#scan");let tm=null,t0=0,nIn=0;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";_pv="";nIn=0;if(v)onRead(v)};
+  // digitado à mão (tecla a tecla, devagar) → ao confirmar, o teclado some; leitura do coletor (tudo de uma vez) → teclado continua aberto
+  const manual=()=>{const v=i.value.trim();return v&&nIn>=2&&(Date.now()-t0)/v.length>45};
+  const goMan=()=>{ui.kbOff=true;go();try{i.blur()}catch(e){}};
+  $("#bGo").onclick=()=>{if(i.value.trim())goMan();else go()};$("#bCam").onclick=openCam;
+  i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"||e.keyCode===13){e.preventDefault();if(manual())goMan();else go()}});
   i.addEventListener("focus",()=>{ui.kbOff=false});
   // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
-  i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
+  i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(!v)nIn=0;else{if(!nIn)t0=Date.now();nIn++}if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
   i.addEventListener("blur",()=>setTimeout(()=>{const a=document.activeElement;if(!a||a===document.body)focusScan()},300))})();
 // tocar num botão não tira o foco do campo de leitura (o teclado não fecha)
+// gatilho físico do coletor com o teclado escondido: reabre o campo de leitura
+document.addEventListener("keydown",e=>{if([139,293,294].includes(e.keyCode)&&ui.kbOff){ui.kbOff=false;focusScan()}},true);
 document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn");if(b&&document.activeElement===$("#scan")&&!b.closest(".pkfind"))e.preventDefault()},true);
 // leitor do coletor: alguns modos colocam o texto no campo sem avisar a página (sem "input"/Enter).
 // Então o campo é vigiado: código completo parado por um instante → processa.
