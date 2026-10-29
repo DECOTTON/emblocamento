@@ -70,7 +70,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 <header><h1>📟 Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button>
 <div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" placeholder="Aguardando leitura…"><button class="sb" id="bAbc" type="button" title="Trocar teclado">ABC</button><button class="sb" id="bGo" type="button">OK</button><button class="sb pri" id="bCam" type="button" title="Câmera">📷</button></div></header>
 <main id="app"></main>
-<input type="file" id="fPac" accept=".json,application/json" hidden>
+<input type="file" id="fPac" accept=".txt,.json,text/plain,application/json" hidden>
 <script>
 "use strict";
 // ======================================================================
@@ -78,7 +78,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.3.2";
+const VER="1.4.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -145,7 +145,7 @@ function render(){
   $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
   const a=$("#app");
   if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
-    <ol><li>No app principal (com internet): <b>Fardinhos a emblocar › 📟 Coletor › Baixar pacote para o coletor</b>.</li><li>Aqui: toque em <b>Carregar pacote</b> e escolha o arquivo <b>pacote-coletor-…json</b> — da pasta Downloads ou do <b>Google Drive</b> (no seletor de arquivos, toque em ☰ e escolha <b>Drive</b>).</li></ol>
+    <ol><li>No app principal (com internet): <b>Fardinhos a emblocar › 📟 Coletor › Baixar pacote para o coletor</b>.</li><li>Aqui: toque em <b>Carregar pacote</b> e escolha o arquivo <b>pacote-coletor-…</b> (.txt ou .json) — da pasta Downloads ou do <b>Google Drive</b> (no seletor de arquivos, toque em ☰ e escolha <b>Drive</b>).</li></ol>
     <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>${sessListHTML()}`;wire();return}
   const s=cur();
   if(!s){a.innerHTML=`${pickHTML()}${sessListHTML()}`;wire();wirePick();focusScan();return}
@@ -297,19 +297,19 @@ $("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target
     let rem=0;for(const s of S.sessoes){const pv=prevLidos(s.lote,s.k),n0=s.lidos.length;s.lidos=s.lidos.filter(x=>!pv.has(`${x.p}-${x.n}`));rem+=n0-s.lidos.length}
     S.sessoes=S.sessoes.filter(s=>s.lidos.length||s.alertas.length&&!s.exp||s.id===S.atual);if(!cur())S.atual=null;await saveState();
     render();toast(`Pacote carregado: ${fmt(j.f.length/3)} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
-  catch(err){toast("Arquivo inválido: escolha o pacote-coletor-…json gerado no app principal.",4000)}};
+  catch(err){toast("Arquivo inválido: escolha o pacote-coletor-… gerado no app principal.",4000)}};
 
 // ---------- exportar leituras ----------
 // exportar: "Salvar no Google Drive" (compartilhar → Drive) ou salvar no aparelho (Downloads)
 function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.length||s.desc.length);if(!ss.length){toast("Nenhuma leitura para exportar.");return}
   const j={tipo:"rsp-coletor-leituras",v:1,disp:S.disp||"",app:VER,exportado:nowISO(),pacote:PAC?PAC.gerado:null,sessoes:ss.map(s=>({k:s.k,addr:s.addr,lote:s.lote,inicio:s.inicio,fim:s.fim,lidos:s.lidos,alertas:s.alertas,desc:s.desc}))};
-  const d=new Date(),p=n=>String(n).padStart(2,"0"),name=`leituras-coletor-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
-  const blob=new Blob([JSON.stringify(j)],{type:"application/json"});let file=null,canSh=false;
-  try{file=new File([blob],name,{type:"application/json"});canSh=!!(navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){}
+  const d=new Date(),p=n=>String(n).padStart(2,"0"),name=`leituras-coletor-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.txt`;
+  const blob=new Blob([JSON.stringify(j)],{type:"text/plain"});let file=null,canSh=false;
+  try{file=new File([blob],name,{type:"text/plain"});canSh=!!(navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){}
   const done=async(onde)=>{ss.forEach(s=>s.exp=true);await saveState();closeSheet();render();
     showSheet(`<h3>Leituras exportadas</h3><p>Arquivo <b>${esc(name)}</b> ${onde}.</p><p>No app principal (computador ou celular, com internet): <b>Fardinhos a emblocar › 📟 Coletor › Escolher arquivo de leituras</b>${onde.includes("Drive")?" e escolha o arquivo no <b>Google Drive</b> (no computador: em drive.google.com, baixe o arquivo e escolha-o)":""}.</p><button class="btn pri big" type="button" data-x>OK</button>`)};
   showSheet(`<h3>Exportar leituras</h3><p>${fmt(ss.reduce((t,s)=>t+s.lidos.length,0))} leitura(s) em ${ss.length} box(es).</p>
-    ${canSh?`<button class="btn pri big" type="button" id="exDrive" style="margin-bottom:8px">☁ Salvar no Google Drive</button><p class="hint" style="margin:-2px 0 10px">Abre o "Compartilhar": escolha <b>Drive</b> (Salvar no Drive) e a pasta. Precisa de internet e do app Google Drive no aparelho.</p>`:""}
+    ${canSh?`<button class="btn pri big" type="button" id="exDrive" style="margin-bottom:8px">☁ Enviar (Drive, Bluetooth…)</button><p class="hint" style="margin:-2px 0 10px">Abre o "Compartilhar": escolha <b>Drive</b> (Salvar no Drive) ou <b>Bluetooth</b> (ligue o Bluetooth antes).</p>`:""}
     <button class="btn big" type="button" id="exDev" style="margin-bottom:8px">⤓ Salvar no aparelho (Downloads)</button><button class="btn big" type="button" data-x>Cancelar</button>`,o=>{
     const dr=$("#exDrive");if(dr)dr.onclick=async()=>{try{await navigator.share({files:[file],title:name});await done("enviado pelo Compartilhar (Google Drive)")}catch(e){if(!(e&&e.name==="AbortError"))toast("Não foi possível compartilhar. Use Salvar no aparelho.")}};
     $("#exDev").onclick=async()=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);await done("salvo no aparelho (pasta Downloads)")}})}
