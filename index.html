@@ -89,7 +89,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.6.3";
+const VER="1.7.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -162,9 +162,9 @@ function render(){
   const a=$("#app");
   if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
     <ol><li>No app principal (com internet): <b>Fardinhos a emblocar › 📟 Coletor › Baixar pacote para o coletor</b>.</li><li>Aqui: toque em <b>Carregar pacote</b> e escolha o arquivo <b>pacote-coletor-…</b> (.txt ou .json) — da pasta Downloads ou do <b>Google Drive</b> (no seletor de arquivos, toque em ☰ e escolha <b>Drive</b>).</li></ol>
-    <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>${sessListHTML()}`;wire();return}
+    <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>`;wire();return}
   const s=cur();
-  if(!s){a.innerHTML=`${pickHTML()}${sessListHTML()}`;wire();wirePick();focusScan();return}
+  if(!s){a.innerHTML=`${pickHTML()}`;wire();wirePick();focusScan();return}
   const n=sessCount(s),meta=sessMeta(s),pc=meta?Math.min(100,Math.round(n/meta*100)):0,L=IX.lotes.get(s.lote);
   const fl=ui.flash||{c:"idle",t:"Aguardando leitura…"};
   a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="muted">${esc(prodOfLote(s.lote)||"")}</span></div>
@@ -202,6 +202,10 @@ function pickHTML(){const pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});
 function wirePick(){const pk=ui.pk;pkWire("pk",pk,render);
   const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.pk={b:"",r:"",sd:"",k:""};const i=$("#scan");if(i)i.value="";render();focusScan()};
   const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
+// leituras no aparelho (pelo Menu)
+function openLeituras(){showSheet(`${sessListHTML()}<button class="btn big" type="button" data-x>Fechar</button>`,o=>{
+  o.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();closeSheet();render();focusScan()});
+  const e=o.querySelector("#bExp");if(e)e.onclick=()=>{closeSheet();exportar()}})}
 function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.inicio).localeCompare(String(a.fim||a.inicio)));
   const pend=L.filter(s=>!s.exp).length;
   return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button></span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
@@ -330,6 +334,7 @@ function closeSheet(){document.querySelectorAll(".ovl").forEach(o=>o.remove());f
 
 // ---------- menu ----------
 $("#bMenu").onclick=()=>showSheet(`<h3>Menu</h3>
+  <button class="btn big" type="button" id="mLei" style="margin-bottom:8px">📋 Leituras no aparelho${(()=>{const n=S.sessoes.filter(z=>!z.exp&&(z.lidos.length||z.alertas.length)).length;return n?` (${n} pendente${n>1?"s":""})`:""})()}</button>
   <button class="btn big" type="button" id="mPac" style="margin-bottom:8px">📂 Carregar pacote novo</button>
   <button class="btn big" type="button" id="mExp" style="margin-bottom:8px">⤓ Exportar leituras</button>
   <button class="btn big" type="button" id="mDisp" style="margin-bottom:8px">✎ Nome deste aparelho (${esc(S.disp||"não definido")})</button>
@@ -337,6 +342,7 @@ $("#bMenu").onclick=()=>showSheet(`<h3>Menu</h3>
   <p class="hint">${PAC?`Pacote: ${fmt(nFard(PAC))} fardinhos · ${fmt(PAC.lotes.length)} lotes · gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR")}`:"Sem pacote."} · versão ${VER}</p>
   <button class="btn big" type="button" data-x>Fechar</button>`,o=>{
   $("#mPac").onclick=()=>{closeSheet();$("#fPac").click()};
+  $("#mLei").onclick=()=>{closeSheet();openLeituras()};
   $("#mExp").onclick=()=>{closeSheet();exportar()};
   $("#mDisp").onclick=()=>{const v=prompt("Nome deste aparelho (ex.: Coletor 1, Celular Pedro):",S.disp||"");if(v!=null){S.disp=v.trim();saveState();closeSheet();render()}};
   $("#mLimpa").onclick=()=>{const n=S.sessoes.filter(s=>s.exp).length;if(!n){toast("Nenhuma leitura exportada para apagar.");return}
