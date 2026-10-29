@@ -78,7 +78,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.3.1";
+const VER="1.3.2";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -173,7 +173,7 @@ const patNome=bid=>{const P=(PAC.patios||[]).find(x=>x[0]===bid);if(P)return `${
 const boxTag=B=>B.ls&&B.ls.length?(B.ls.length>1?`${B.ls.length} lotes`:`lote ${B.ls[0]}`)+(B.mat?` + ${B.mat}`:""):B.mat?B.mat:"livre";
 function pickHTML(){const T=boxTree(),pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});const R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(+pk.r),L=X&&pk.sd?X[pk.sd]:[];
   const opt=(v,t,sel)=>`<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`,B=pk.k&&IX.boxes.get(pk.k);
-  return `<div class="card"><h2>Selecione o box</h2><div class="pkg">
+  return `<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><h2 style="flex:1;margin:0">Selecione o box</h2><button class="btn" type="button" id="pkClr" style="padding:8px 14px">✕ Limpar</button></div><div class="pkg">
     <div><span>Pátio</span><select id="pkB">${opt("","Selecione",!pk.b)}${[...T.keys()].map(b=>opt(b,patNome(b),pk.b===b)).join("")}</select></div>
     <div><span>Rua</span><select id="pkR"${R?"":" disabled"}>${opt("","—",!pk.r)}${R?[...R.keys()].sort((a,b)=>a-b).map(r=>opt(r,"Rua "+r,+pk.r===r)).join(""):""}</select></div>
     <div><span>Lado</span><select id="pkS"${X?"":" disabled"}>${opt("","—",!pk.sd)}${X?["A","B"].filter(z=>X[z].length).map(z=>opt(z,"Lado "+z,pk.sd===z)).join(""):""}</select></div>
@@ -181,6 +181,7 @@ function pickHTML(){const T=boxTree(),pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});c
     ${B?`<div class="pkb"><b>BOX ${esc(B.addr)}</b><span>${esc(boxTag(B))}</span></div><button class="btn pri big" type="button" id="pkGo">Emblocar neste box</button>`:""}</div>`}
 function wirePick(){const pk=ui.pk,sel=(id,f)=>{const e=$(id);if(e)e.onchange=()=>{f(e.value);render()}};
   sel("#pkB",v=>{pk.b=v;pk.r="";pk.sd="";pk.k=""});sel("#pkR",v=>{pk.r=v;pk.sd="";pk.k=""});sel("#pkS",v=>{pk.sd=v;pk.k=""});sel("#pkK",v=>{pk.k=v});
+  const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.pk={b:"",r:"",sd:"",k:""};const i=$("#scan");if(i)i.value="";render();focusScan()};
   const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
 function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.inicio).localeCompare(String(a.fim||a.inicio)));
   const pend=L.filter(s=>!s.exp).length;
