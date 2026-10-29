@@ -78,7 +78,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 </style>
 </head>
 <body>
-<header><h1><img src="icon-180.png" alt="" class="hlogo">Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button>
+<header><h1><img src="logo.png" alt="" class="hlogo">Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button>
 <div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" placeholder="Aguardando leitura…"><button class="sb" id="bAbc" type="button" title="Trocar teclado">ABC</button><button class="sb" id="bGo" type="button">OK</button><button class="sb pri" id="bCam" type="button" title="Câmera">📷</button></div></header>
 <main id="app"></main>
 <input type="file" id="fPac" accept=".txt,.json,text/plain,application/json" hidden>
@@ -89,7 +89,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.6.2";
+const VER="1.6.3";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
