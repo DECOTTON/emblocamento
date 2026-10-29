@@ -1,5 +1,5 @@
 // Service worker: deixa o app e o leitor de códigos disponíveis sem internet
-const CACHE="emblocamento-v9";
+const CACHE="emblocamento-v10";
 const SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-180.png"];
 const EXT=["https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/iife/reader/index.js","https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/reader/zxing_reader.wasm"];
 self.addEventListener("install",e=>{e.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll(SHELL);

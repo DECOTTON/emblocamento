@@ -63,6 +63,16 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .pkg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pkg span{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:3px}
 .pkg select{width:100%;font-size:17px;padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 .pkb{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 8px;padding:8px 10px;background:#EEF1F0;border-radius:10px}.pkb b{font-size:18px}.pkb span{font-weight:700;color:var(--mut)}
+.scard{border:1px solid var(--line);border-left:5px solid #1F5E57;border-radius:10px;padding:10px 12px;background:#fff;color:#1D2E2C}
+.scard .snum{font:800 26px/1.1 system-ui,sans-serif;color:#0F1B1A}
+.scard .sline{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;margin-top:2px}.scard .ssai{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all}.scard .ssai b{font-size:14px;color:#0F1B1A}
+.scard .slab{display:block;font-size:11px;font-weight:700;color:#2E3B39;letter-spacing:.03em;margin-top:8px}.scard .sval{font-size:17px;font-weight:700;color:#0F1B1A}
+.scard .s2{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;align-items:start}.scard .s2.slt{grid-template-columns:auto 1fr}
+.scard .slote{display:inline-block;font:900 40px/1.05 system-ui,sans-serif;background:#F4F6F5;border:1px solid var(--line);border-radius:6px;padding:2px 12px;margin-top:2px;color:#0F1B1A}
+.scard .sbox{margin-top:2px;padding:6px 8px;border-radius:6px;font-size:14px;font-weight:600}.scard .sbox.ok{background:#E3F1E7;color:#1E5E33}.scard .sbox.no{background:#FFF4DB;color:#7A5300}.scard .sbox.ex{background:#ECEFEE;color:#4A5553}
+.scard .sq{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.scard .sq div{background:#F4F6F5;border-radius:6px;padding:6px 8px}.scard .sq span{font-size:11px;color:#2E3B39;font-weight:700}.scard .sq b{display:block;font:800 24px/1.1 system-ui,sans-serif;color:#0F1B1A}
+.scard .sq3{grid-template-columns:1.3fr 1fr 1fr}.scard .sq b.st{font:700 15px/1.2 system-ui,sans-serif;margin-top:3px}
+.scard .sexp .fx,.scard .sexp .fn{padding:6px 8px;border-radius:6px;font-size:14px;font-weight:600;margin-top:2px}.scard .sexp .fx{background:#FDEBD9;color:#7A3E06}.scard .sexp .fn{background:#ECEFEE;color:#1D2E2C}.scard .sxl{font-size:13px;margin-top:6px}
 .hide{display:none!important}
 </style>
 </head>
@@ -78,7 +88,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.4.0";
+const VER="1.5.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -101,13 +111,17 @@ let ui={view:"home",lock:null,flash:null,pend:null,kb:false};
 async function saveState(){try{await DB.set("estado",S)}catch(e){toast("Não foi possível salvar no aparelho!")}}
 
 function buildIndex(P){
-  const f=new Map(),byN=new Map();const F=P.f;
-  for(let i=0;i<F.length;i+=3){const p=F[i],n=F[i+1],li=F[i+2];f.set(p*1e7+n,li);const a=byN.get(n);if(a)a.push(p);else byN.set(n,[p])}
-  const lotes=new Map();for(const[c,prod,qtd,exp,expd,bx]of P.lotes)lotes.set(String(c),{c:String(c),prod,qtd,exp,expd:!!expd,boxes:bx});
+  // f: prensa+nº → posição da linha no pacote (lote, data de beneficiamento e de saída)
+  const f=new Map(),byN=new Map();const F=P.f,st=P.fs||3;
+  for(let i=0;i<F.length;i+=st){const p=F[i],n=F[i+1];f.set(p*1e7+n,i);const a=byN.get(n);if(a)a.push(p);else byN.set(n,[p])}
+  const lotes=new Map();for(const[c,prod,qtd,exp,expd,bx,dexp,cli,emb]of P.lotes)lotes.set(String(c),{c:String(c),prod,qtd,exp,expd:!!expd,boxes:bx,dexp:dexp||"",cli:cli||"",emb:emb??null});
   const boxes=new Map(),byAddr=new Map();for(const[k,addr,mat,ls]of P.boxes){boxes.set(k,{k,addr,mat,ls});byAddr.set(normAddr(addr),k)}
-  return{f,byN,lotes,boxes,byAddr}}
+  return{f,byN,lotes,boxes,byAddr,st}}
+const nFard=P=>Math.round(P.f.length/(P.fs||3));
+const rowLote=ri=>{const li=PAC.f[ri+2];return li>=0?PAC.lc[li]:""};
+const rowDate=(ri,o)=>{if(!PAC.dd||(PAC.fs||3)<5)return"";return PAC.dd[PAC.f[ri+o]]||""};
 const normAddr=s=>String(s||"").toUpperCase().replace(/[^0-9A-Z]/g,"");
-const loteOfRow=li=>li>=0?PAC.lc[li]:"";
+
 const prodOfLote=c=>{const L=IX.lotes.get(c);if(L&&L.prod)return L.prod;const i=PAC.lc.indexOf(c);return i>=0?(PAC.lp[i]||""):""};
 
 // ---------- leitura da etiqueta: SAI (código de barras) ou link Abrapa (QR) ----------
@@ -122,9 +136,10 @@ function scanParse(txt){
   if(bad)return{...bad,badCheck:true};if(d&&d.length<=7)return{num:+d,prensa:null,ok:true,sai:false};return null}
 // fardinho no pacote → {p,n,lote} (sem prensa: tenta a prensa do lote da sessão)
 function findFard(P,loteSess){
-  if(P.prensa){const li=IX.f.get(P.prensa*1e7+P.num);return li===undefined?null:{p:P.prensa,n:P.num,lote:loteOfRow(li)}}
+  const code=P.code||"";
+  if(P.prensa){const ri=IX.f.get(P.prensa*1e7+P.num);return ri===undefined?null:{p:P.prensa,n:P.num,lote:rowLote(ri),ri,code}}
   const ps=IX.byN.get(P.num)||[];if(!ps.length)return null;
-  const c=ps.map(p=>({p,n:P.num,lote:loteOfRow(IX.f.get(p*1e7+P.num))}));
+  const c=ps.map(p=>{const ri=IX.f.get(p*1e7+P.num);return{p,n:P.num,lote:rowLote(ri),ri,code}});
   if(c.length===1)return c[0];const m=c.find(x=>x.lote===loteSess);return m||{amb:c}}
 
 // ---------- sons e vibração ----------
@@ -247,17 +262,37 @@ function handleInSession(s,F,P){
   if(meta&&n>meta)ui.flash={c:"dup",t:`✓ P${F.p} ${g3(F.n)} · atenção: acima do saldo do lote (${meta})`};
   render()}
 // 1º fardinho define o lote; o box vem dos boxes do lote no pacote (ou escolhido)
-function startFromFard(F){
-  if(!F.lote){sBad();showSheet(`<h3>Fardinho sem lote</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI). Comece por outro fardinho ou pelo endereço do box.</p><button class="btn pri big" type="button" data-x>OK</button>`);return}
-  const L=IX.lotes.get(F.lote);
-  if(L&&L.expd){sBad();showSheet(`<h3>Lote ${esc(F.lote)} já expedido</h3><p>O pacote indica que este lote já foi expedido. Confira o fardinho.</p><button class="btn pri big" type="button" data-x>OK</button>`);return}
-  const bx=lotBoxes(F.lote);
-  showSheet(`<h3>Lote <span class="pill" style="font-size:22px">${esc(F.lote)}</span> · ${esc(prodOfLote(F.lote))}</h3>
-    ${bx.length?`<p>Em qual box você está emblocando?</p>${bx.map(b=>`<button class="btn big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">BOX ${esc(b[1])}${b[2]!=null?` · ${b[2]} contado(s)`:""}</button>`).join("")}`:`<p>Este lote ainda não tem box no pátio. Digite o box onde ele está sendo emblocado:</p>`}
-    <input class="scan" id="bxIn" placeholder="Outro box (ex.: P2 R5 23A)" autocomplete="off" autocapitalize="characters" style="margin-top:6px"><button class="btn pri big" type="button" id="bxOk" style="margin-top:8px">Usar este box</button><button class="btn big" type="button" data-x style="margin-top:8px">Cancelar</button>`,
+// cartão do fardinho (mesmas informações da janela "Ler etiqueta" do app principal)
+function fardCard(F){const L=F.lote?IX.lotes.get(F.lote):null,db=rowDate(F.ri,3),ds=rowDate(F.ri,4);
+  const sc=F.code&&F.code.length===20?`${F.code.slice(0,13)}<b>${F.code.slice(13,19)}</b>${F.code.slice(19)}`:"";
+  let st,cls="no";
+  if(!F.lote)st="Fardinho ainda sem lote (aguardando HVI)";
+  else if(!L)st=`Lote ${esc(F.lote)} ainda não cadastrado em Todos os lotes`;
+  else if(L.expd){st=`Lote ${esc(F.lote)} já expedido`;cls="ex"}
+  else if(L.boxes.length){st=`✓ Lote aberto no box <b>${L.boxes.map(b=>esc(b[1])).join("</b> e <b>")}</b>`;cls="ok"}
+  else st=`Lote ${esc(F.lote)} ainda sem box no pátio (barracão)`;
+  const nPl=F.lote?(()=>{let n=0;const li=PAC.lc.indexOf(F.lote),stp=PAC.fs||3;for(let i=2;i<PAC.f.length;i+=stp)if(PAC.f[i]===li)n++;return n})():0;
+  const qP=L&&L.qtd!=null?fmt(L.qtd):F.lote?`${fmt(nPl)}<small style="font-size:12px"> na planilha</small>`:"—";
+  const qE=L&&L.emb!=null?fmt(L.emb):"—";
+  const xq=L?(L.expd?(L.exp||L.qtd||0):(L.exp||0)):0,sd=L&&L.qtd!=null?Math.max(0,L.qtd-(L.exp||0)):null;
+  const lst=!L?"—":L.expd?"Expedido totalmente":xq>0?"Expedição parcial":"Não expedido";
+  return `<div class="scard"><div class="snum">Nº ${g3(F.n)}</div>
+    <div class="sline"><span>Prensa: <b>${F.p||"—"}</b></span>${sc?`<span class="ssai">SAI: ${sc}</span>`:""}</div>
+    <div class="s2"><div><span class="slab">FAZENDA/PRODUTOR:</span><div class="sval">${esc(F.lote?prodOfLote(F.lote)||"—":"—")}</div></div><div><span class="slab">DATA DE BENEFICIAMENTO:</span><div class="sval">${esc(db||"—")}</div></div></div>
+    <div class="s2 slt"><div><span class="slab">LOTE:</span><div class="slote">${F.lote?esc(F.lote):"—"}</div></div><div><span class="slab">SITUAÇÃO DO LOTE:</span><div class="sbox ${cls}">${st}</div></div></div>
+    <div class="sq"><div><span>QTD. PRODUZIDA</span><b>${qP}</b></div><div><span>QTD. EMBLOCADA</span><b>${qE}</b></div></div>
+    <span class="slab">EXPEDIÇÃO:</span><div class="sexp"><div class="${ds?"fx":"fn"}">${ds?`🚚 Este fardinho saiu em <b>${esc(ds)}</b>`:"Este fardinho ainda não saiu (sem data de saída na planilha)"}</div>
+    ${L?`<div class="sq sq3"><div><span>LOTE</span><b class="st">${lst}</b></div><div><span>EXPEDIDA</span><b>${fmt(xq)}</b></div><div><span>SALDO</span><b>${sd==null?"—":fmt(sd)}</b></div></div>
+    ${L.dexp||L.cli?`<div class="sxl">${L.dexp?`Data de expedição do lote: <b>${esc(L.dexp)}</b>`:""}${L.dexp&&L.cli?" · ":""}${L.cli?`Cliente: <b>${esc(L.cli)}</b>`:""}</div>`:""}`:""}</div></div>`}
+function startFromFard(F){const L=F.lote?IX.lotes.get(F.lote):null;const bad=!F.lote||(L&&L.expd);if(bad)sBad();
+  const bx=F.lote&&!(L&&L.expd)?lotBoxes(F.lote):[];
+  showSheet(`${fardCard(F)}
+    ${bad?`<button class="btn pri big" type="button" data-x>OK</button>`:`<h3 style="margin-top:12px">Em qual box você está emblocando?</h3>
+    ${bx.map(b=>`<button class="btn pri big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">Emblocar no BOX ${esc(b[1])}${b[2]!=null?` · ${b[2]} contado(s)`:""}</button>`).join("")}
+    <input class="scan" id="bxIn" placeholder="${bx.length?"Outro box":"Box"} (ex.: P2 R5 23A)" autocomplete="off" autocapitalize="characters" style="margin-top:4px"><button class="btn big" type="button" id="bxOk" style="margin-top:8px">Usar este box</button><button class="btn big" type="button" data-x style="margin-top:8px">Cancelar</button>`}`,
     o=>{o.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{closeSheet();newSess(b.dataset.k,F)});
       const ok=()=>{const k=IX.byAddr.get(normAddr($("#bxIn").value));if(!k){toast("Box não encontrado no pacote. Confira o endereço.");return}closeSheet();newSess(k,F)};
-      $("#bxOk").onclick=ok;$("#bxIn").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();ok()}}})}
+      if($("#bxOk")){$("#bxOk").onclick=ok;$("#bxIn").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();ok()}}}})}
 function startBoxPick(k){const B=IX.boxes.get(k);const ls=B.ls||[];
   if(ls.length===1){newSess(k,null,ls[0]);return}
   newSess(k,null,null);ui.flash={c:"idle",t:ls.length?`Box com ${ls.length} lotes (${ls.join(", ")}): leia o 1º fardinho para definir o lote`:"Leia o 1º fardinho para definir o lote"};render()}
@@ -281,7 +316,7 @@ $("#bMenu").onclick=()=>showSheet(`<h3>Menu</h3>
   <button class="btn big" type="button" id="mExp" style="margin-bottom:8px">⤓ Exportar leituras</button>
   <button class="btn big" type="button" id="mDisp" style="margin-bottom:8px">✎ Nome deste aparelho (${esc(S.disp||"não definido")})</button>
   <button class="btn big" type="button" id="mLimpa" style="margin-bottom:8px">🗑 Apagar leituras já exportadas</button>
-  <p class="hint">${PAC?`Pacote: ${fmt(PAC.f.length/3)} fardinhos · ${fmt(PAC.lotes.length)} lotes · gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR")}`:"Sem pacote."} · versão ${VER}</p>
+  <p class="hint">${PAC?`Pacote: ${fmt(nFard(PAC))} fardinhos · ${fmt(PAC.lotes.length)} lotes · gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR")}`:"Sem pacote."} · versão ${VER}</p>
   <button class="btn big" type="button" data-x>Fechar</button>`,o=>{
   $("#mPac").onclick=()=>{closeSheet();$("#fPac").click()};
   $("#mExp").onclick=()=>{closeSheet();exportar()};
@@ -296,7 +331,7 @@ $("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target
     // leituras que já entraram no sistema (estão no pacote novo) saem do aparelho
     let rem=0;for(const s of S.sessoes){const pv=prevLidos(s.lote,s.k),n0=s.lidos.length;s.lidos=s.lidos.filter(x=>!pv.has(`${x.p}-${x.n}`));rem+=n0-s.lidos.length}
     S.sessoes=S.sessoes.filter(s=>s.lidos.length||s.alertas.length&&!s.exp||s.id===S.atual);if(!cur())S.atual=null;await saveState();
-    render();toast(`Pacote carregado: ${fmt(j.f.length/3)} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
+    render();toast(`Pacote carregado: ${fmt(nFard(j))} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
   catch(err){toast("Arquivo inválido: escolha o pacote-coletor-… gerado no app principal.",4000)}};
 
 // ---------- exportar leituras ----------
