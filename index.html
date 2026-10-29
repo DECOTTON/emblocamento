@@ -91,7 +91,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.8.1";
+const VER="1.8.2";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -347,7 +347,8 @@ function newSess(k,F,lote){const B=IX.boxes.get(k);
 function lockScreen(kind,html,btns){ui.lock=kind;const d=document.createElement("div");d.className="lock "+kind;d.id="lock";d.innerHTML=html+btns.map((b,i)=>`<button class="btn" type="button" data-b="${i}">${esc(b[0])}</button>`).join("");document.body.appendChild(d);
   d.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>btns[+b.dataset.b][1]());const rep=setInterval(()=>{if(!ui.lock){clearInterval(rep);return}vib(200)},2500)}
 function unlock(){ui.lock=null;const d=$("#lock");if(d)d.remove();const i=$("#scan");if(i){i.value="";_pv=""}ui.flash={c:"idle",t:"Aguardando leitura…"};render();focusScan()}
-function showSheet(html,init){closeSheet();const o=document.createElement("div");o.className="ovl";o.innerHTML=`<div class="sheet">${html}</div>`;document.body.appendChild(o);
+function showSheet(html,init){closeSheet();{const i=$("#scan");if(i)i.blur()} // janela aberta: esconde o teclado
+  const o=document.createElement("div");o.className="ovl";o.innerHTML=`<div class="sheet">${html}</div>`;document.body.appendChild(o);
   o.onclick=e=>{if(e.target===o||e.target.hasAttribute("data-x"))closeSheet()};if(init)init(o)}
 function closeSheet(){document.querySelectorAll(".ovl").forEach(o=>o.remove());focusScan()}
 
