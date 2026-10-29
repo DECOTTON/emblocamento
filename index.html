@@ -91,7 +91,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.8.2";
+const VER="1.8.3";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -203,7 +203,7 @@ function pkWire(x,pk,redraw){const sel=(id,f)=>{const e=$("#"+x+id);if(e)e.oncha
   sel("B",v=>{pk.b=v;pk.r="";pk.sd="";pk.k=""});sel("R",v=>{pk.r=v;pk.sd="";pk.k=""});sel("S",v=>{pk.sd=v;pk.k=""});sel("K",v=>{pk.k=v})}
 function pickHTML(){const pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});
   return `<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><h2 style="flex:1;margin:0">Selecione o box</h2><button class="btn" type="button" id="pkClr" style="padding:8px 14px">✕ Limpar</button></div>
-    <div class="pkfind"><input type="text" id="pkLote" inputmode="numeric" autocomplete="off" placeholder="Buscar lote (ex.: 1064)" value="${esc(ui.pkLote||"")}"><button class="btn" type="button" id="pkLoteGo">🔍 Buscar</button></div>
+    <form class="pkfind" id="pkForm" action="#"><input type="search" id="pkLote" inputmode="numeric" enterkeyhint="search" autocomplete="off" placeholder="Buscar lote (ex.: 1064)" value="${esc(ui.pkLote||"")}"><button class="btn" type="submit" id="pkLoteGo">🔍 Buscar</button></form>
     ${ui.pkMsg?`<p class="pkmsg">${ui.pkMsg}</p>`:""}${pkSelects("pk",pk)}</div>`}
 // buscar lote: preenche pátio, rua, lado e box com o box do lote (ou mostra os boxes, se houver mais de um)
 function buscaLote(v){const c=String(v||"").trim();ui.pkLote=c;ui.pkMsg="";if(!c){render();return}
@@ -215,7 +215,9 @@ function buscaLote(v){const c=String(v||"").trim();ui.pkLote=c;ui.pkMsg="";if(!c
   fill(L.boxes[0][0]);
   ui.pkMsg=`Lote <b>${esc(c)}</b> · ${esc(L.prod||"")}${L.boxes.length>1?` · também em: ${L.boxes.slice(1).map(b=>`<a href="#" data-pkk="${esc(b[0])}">${esc(b[1])}</a>`).join(", ")}`:""}`;render()}
 function wirePick(){const pk=ui.pk;pkWire("pk",pk,()=>{ui.pkMsg="";render()});
-  const li=$("#pkLote");if(li){$("#pkLoteGo").onclick=()=>{buscaLote(li.value);focusScan()};li.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();buscaLote(li.value);focusScan()}}}
+  // Enter / "Buscar" do teclado do celular envia o formulário: busca sem precisar tocar no botão
+  const li=$("#pkLote"),fm=$("#pkForm");if(li&&fm){const go=()=>{buscaLote(li.value);focusScan()};
+    fm.onsubmit=e=>{e.preventDefault();go()};li.addEventListener("keyup",e=>{if(e.key==="Enter"||e.keyCode===13){e.preventDefault();go()}})}
   document.querySelectorAll("[data-pkk]").forEach(a=>a.onclick=e=>{e.preventDefault();const k=a.dataset.pkk,[,b,r,pos]=k.split("|");ui.pk={b,r:String(+r),sd:+pos%2?"A":"B",k};render()});
   const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.pk={b:"",r:"",sd:"",k:""};ui.pkLote="";ui.pkMsg="";const i=$("#scan");if(i)i.value="";render();focusScan()};
   const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
