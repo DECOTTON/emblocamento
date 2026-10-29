@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Emblocamento</title>
+<meta name="theme-color" content="#1F5E57">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Emblocamento">
+<style>
+:root{--ink:#0F1B1A;--mut:#3E4A48;--bg:#EEF1F0;--card:#fff;--line:#C9D1CF;--acc:#1F5E57;--ok:#1E8E3E;--bad:#C62828;--warn:#B26A00;--warnbg:#FFF2D6}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer}
+header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:10px 14px calc(10px);padding-top:max(10px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
+header h1{font-size:19px;margin:0;flex:1}
+header small{display:block;font-size:12px;opacity:.85;font-weight:500}
+.hb{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:7px 10px;font-size:14px;font-weight:700}
+main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h2{font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 8px;color:var(--acc)}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:12px 14px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.big{width:100%;padding:16px;font-size:18px}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 auto}
+.scan{width:100%;font:700 20px/1.2 ui-monospace,Menlo,monospace;padding:14px;border:3px solid var(--acc);border-radius:12px;color:var(--ink);background:#fff;-webkit-text-fill-color:var(--ink)}
+.scan::placeholder{font:500 15px system-ui,sans-serif;color:#6B7774;-webkit-text-fill-color:#6B7774}
+.hint{font-size:13px;color:var(--mut);margin:6px 0 0}
+.muted{color:var(--mut)}
+.lst{list-style:none;margin:0;padding:0}.lst li{border-top:1px solid var(--line);padding:9px 2px;display:flex;gap:8px;align-items:center}.lst li:first-child{border-top:0}
+.lst li b{font-size:17px}.lst li .r{margin-left:auto;text-align:right}
+.pill{display:inline-block;font-weight:800;background:#EEF1F0;border:1px solid var(--line);border-radius:6px;padding:1px 8px}
+.sess-h{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.sess-h .bx{font:800 26px/1.1 system-ui,sans-serif}
+.lote{font:900 46px/1 system-ui,sans-serif;background:#F4F6F5;border:1px solid var(--line);border-radius:8px;padding:2px 12px;display:inline-block}
+.cnt{font:900 64px/1 system-ui,sans-serif;text-align:center;margin:8px 0 2px}
+.cnt small{font-size:28px;color:var(--mut);font-weight:800}
+.bar{height:14px;background:#DDE3E1;border-radius:7px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);transition:width .2s}
+.flash{border-radius:12px;padding:12px;text-align:center;font-weight:800;font-size:18px;margin:10px 0;min-height:52px;display:flex;align-items:center;justify-content:center}
+.flash.ok{background:#DDF3E3;color:#14552A}.flash.dup{background:var(--warnbg);color:#6B4100}.flash.idle{background:#EEF1F0;color:var(--mut);font-weight:600;font-size:15px}
+.flash.done{background:var(--ok);color:#fff;font-size:22px}
+.lock{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;gap:14px}
+.lock.bad{background:var(--bad)}.lock.warn{background:#8A5300}
+.lock h3{font-size:30px;margin:0;line-height:1.1}.lock p{font-size:19px;margin:0;max-width:520px}.lock .lt{font:900 54px/1 system-ui,sans-serif;background:#fff;color:var(--bad);border-radius:10px;padding:4px 16px}
+.lock .btn{background:#fff;color:var(--ink);border:0;font-size:19px;padding:16px 22px;max-width:420px;width:100%}
+.lock .btn.sec{background:transparent;color:#fff;border:2px solid #fff}
+.ovl{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:640px;border-radius:16px 16px 0 0;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));max-height:85vh;overflow:auto}
+.sheet h3{margin:0 0 10px;font-size:19px}
+.cam{position:fixed;inset:0;z-index:45;background:#000;display:flex;flex-direction:column}
+.cam video{flex:1;width:100%;object-fit:cover}
+.cam .cbar{display:flex;gap:8px;padding:10px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:#111}
+.cam .tgt{position:absolute;left:8%;right:8%;top:30%;height:26%;border:3px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
+.cam .cmsg{position:absolute;left:0;right:0;top:12px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px #000}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1D2E2C;color:#fff;padding:10px 16px;border-radius:10px;z-index:60;font-weight:600;max-width:90vw;text-align:center}
+.tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 6px}.tag.ok{background:#DDF3E3;color:#14552A}.tag.warn{background:var(--warnbg);color:#6B4100}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>📟 Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button></header>
+<main id="app"></main>
+<input type="file" id="fPac" accept=".json,application/json" hidden>
+<script>
+"use strict";
+// ======================================================================
+// App offline de emblocamento (coletor / celular) — RSP Cotton
+// Carrega o "pacote" gerado no app principal, confere cada fardinho lido
+// contra o lote do box, conta e devolve as leituras em arquivo.
+// ======================================================================
+const VER="1.0.0";
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
+const g3=v=>String(v).replace(/\B(?=(\d{3})+(?!\d))/g," ");
+const nowISO=()=>new Date().toISOString();
+const uid=()=>"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function toast(t,ms){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),ms||2600)}
+
+// ---------- armazenamento no aparelho (IndexedDB) ----------
+const DB={db:null,
+  open(){return this.db?Promise.resolve(this.db):new Promise((ok,ko)=>{const r=indexedDB.open("emblocamento",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>{this.db=r.result;ok(this.db)};r.onerror=()=>ko(r.error)})},
+  async get(k){const db=await this.open();return new Promise((ok,ko)=>{const q=db.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error)})},
+  async set(k,v){const db=await this.open();return new Promise((ok,ko)=>{const t=db.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=()=>ok();t.onerror=()=>ko(t.error)})}};
+
+// ---------- estado ----------
+let PAC=null;          // pacote cru
+let IX=null;           // índices do pacote
+let S={sessoes:[],atual:null,disp:""};  // leituras (persistidas)
+let ui={view:"home",lock:null,flash:null,pend:null,kb:false};
+async function saveState(){try{await DB.set("estado",S)}catch(e){toast("Não foi possível salvar no aparelho!")}}
+
+function buildIndex(P){
+  const f=new Map(),byN=new Map();const F=P.f;
+  for(let i=0;i<F.length;i+=3){const p=F[i],n=F[i+1],li=F[i+2];f.set(p*1e7+n,li);const a=byN.get(n);if(a)a.push(p);else byN.set(n,[p])}
+  const lotes=new Map();for(const[c,prod,qtd,exp,expd,bx]of P.lotes)lotes.set(String(c),{c:String(c),prod,qtd,exp,expd:!!expd,boxes:bx});
+  const boxes=new Map(),byAddr=new Map();for(const[k,addr,mat,ls]of P.boxes){boxes.set(k,{k,addr,mat,ls});byAddr.set(normAddr(addr),k)}
+  return{f,byN,lotes,boxes,byAddr}}
+const normAddr=s=>String(s||"").toUpperCase().replace(/[^0-9A-Z]/g,"");
+const loteOfRow=li=>li>=0?PAC.lc[li]:"";
+const prodOfLote=c=>{const L=IX.lotes.get(c);if(L&&L.prod)return L.prod;const i=PAC.lc.indexOf(c);return i>=0?(PAC.lp[i]||""):""};
+
+// ---------- leitura da etiqueta: SAI (código de barras) ou link Abrapa (QR) ----------
+function parseSAI(v){const d=String(v??"").replace(/\D/g,"");if(!d)return null;
+  if(d.length===20&&d.startsWith("00")){const ss=d.slice(2);let t=0;for(let i=0;i<17;i++)t+=+ss[16-i]*(i%2?1:3);
+    return{num:+d.slice(13,19),prensa:+d[12],ok:(10-t%10)%10===+ss[17],sai:true,code:d}}
+  if(d.length<=7)return{num:+d,prensa:null,ok:true,sai:false};return{bad:true}}
+function scanParse(txt){
+  const m=String(txt||"").match(/\/00\/(\d{18})(?!\d)/);if(m){const p=parseSAI("00"+m[1]);if(p&&p.sai)return p}
+  const d=String(txt||"").replace(/\D/g,"");let bad=null;
+  for(let i=0;i+20<=d.length;i++){if(d[i]!=="0"||d[i+1]!=="0")continue;const p=parseSAI(d.slice(i,i+20));if(p&&p.sai){if(p.ok)return p;bad=bad||p}}
+  if(bad)return{...bad,badCheck:true};if(d&&d.length<=7)return{num:+d,prensa:null,ok:true,sai:false};return null}
+// fardinho no pacote → {p,n,lote} (sem prensa: tenta a prensa do lote da sessão)
+function findFard(P,loteSess){
+  if(P.prensa){const li=IX.f.get(P.prensa*1e7+P.num);return li===undefined?null:{p:P.prensa,n:P.num,lote:loteOfRow(li)}}
+  const ps=IX.byN.get(P.num)||[];if(!ps.length)return null;
+  const c=ps.map(p=>({p,n:P.num,lote:loteOfRow(IX.f.get(p*1e7+P.num))}));
+  if(c.length===1)return c[0];const m=c.find(x=>x.lote===loteSess);return m||{amb:c}}
+
+// ---------- sons e vibração ----------
+let AC=null;function beep(f,ms,n){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t0=AC.currentTime;for(let i=0;i<(n||1);i++){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.type="square";g.gain.value=.12;o.connect(g);g.connect(AC.destination);const s=t0+i*(ms+70)/1000;o.start(s);o.stop(s+ms/1000)}}catch(e){}}
+const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+const sOk=()=>{beep(1250,70);vib(40)},sDup=()=>{beep(600,120,2);vib([60,60,60])},sBad=()=>{beep(260,260,3);vib([300,120,300,120,300])};
+
+// ---------- sessões ----------
+const cur=()=>S.sessoes.find(s=>s.id===S.atual)||null;
+const prevLidos=(lote,k)=>new Set((PAC&&PAC.lidos&&PAC.lidos[lote+"|"+k])||[]);
+function sessCount(s){const all=new Set([...prevLidos(s.lote,s.k),...s.lidos.map(x=>`${x.p}-${x.n}`)]);return all.size}
+function sessMeta(s){const L=IX&&IX.lotes.get(s.lote);if(L&&L.qtd)return Math.max(0,L.qtd-(L.exp||0))||L.qtd;return PAC?PAC.cap||130:130}
+function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
+
+// ---------- telas ----------
+function render(){
+  $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
+  const a=$("#app");
+  if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
+    <ol><li>No app principal (com internet): <b>Fardinhos a emblocar › 📟 Coletor › Baixar pacote para o coletor</b>.</li><li>Aqui: toque em <b>Carregar pacote</b> e escolha o arquivo <b>pacote-coletor-…json</b> (normalmente na pasta Downloads).</li></ol>
+    <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>${sessListHTML()}`;wire();return}
+  const s=cur();
+  if(!s){a.innerHTML=`<div class="card"><h2>Novo box</h2>
+      <input class="scan" id="scan" placeholder="Leia o 1º fardinho do box ou digite o box (P2 R5 23A)" autocomplete="off" autocapitalize="characters" ${ui.kb?'inputmode="text"':'inputmode="none"'}>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" id="bKb">${ui.kb?"Esconder teclado":"⌨ Digitar"}</button><button class="btn" type="button" id="bGo">OK</button><button class="btn pri" type="button" id="bCam">📷 Câmera</button></div>
+      <p class="hint">No coletor, aperte o gatilho com a tela aberta: a leitura entra sozinha neste campo.</p></div>${sessListHTML()}`;wire();focusScan();return}
+  const n=sessCount(s),meta=sessMeta(s),pc=meta?Math.min(100,Math.round(n/meta*100)):0,L=IX.lotes.get(s.lote);
+  const fl=ui.flash||{c:"idle",t:"Aguardando leitura…"};
+  a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="muted">${esc(prodOfLote(s.lote)||"")}</span></div>
+     <div style="display:flex;align-items:center;gap:12px;margin-top:6px"><div><div class="muted" style="font-size:12px;font-weight:700">LOTE</div><span class="lote">${esc(s.lote||"?")}</span></div>
+     <div style="flex:1"><div class="cnt">${fmt(n)}<small> / ${fmt(meta)}</small></div><div class="bar"><i style="width:${pc}%"></i></div></div></div>
+     <div class="flash ${n>=meta&&meta?"done":fl.c}">${n>=meta&&meta&&fl.c!=="dup"?"✓ LOTE COMPLETO":fl.t}</div>
+     <input class="scan" id="scan" placeholder="Aguardando leitura… (ou digite o nº)" autocomplete="off" ${ui.kb?'inputmode="numeric"':'inputmode="none"'}>
+     <div class="row" style="margin-top:8px"><button class="btn" type="button" id="bKb">${ui.kb?"Esconder teclado":"⌨ Digitar"}</button><button class="btn" type="button" id="bGo">OK</button><button class="btn pri" type="button" id="bCam">📷 Câmera</button></div>
+     ${L&&L.boxes.length>1?`<p class="hint">Lote também em: ${L.boxes.filter(b=>b[0]!==s.k).map(b=>esc(b[1])).join(", ")}</p>`:""}
+   </div>
+   <div class="card"><h2>Últimas leituras (${fmt(s.lidos.length)} nesta sessão${s.alertas.length?` · <span style="color:var(--bad)">${s.alertas.length} de outro lote</span>`:""})</h2>
+     <ul class="lst">${s.lidos.slice(-8).reverse().map(x=>`<li><span class="tag ok">✓</span><b>P${x.p} ${g3(x.n)}</b><span class="r muted">${new Date(x.t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></li>`).join("")||`<li class="muted">Nenhuma leitura ainda.</li>`}</ul>
+     <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
+  wire();focusScan()}
+function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.inicio).localeCompare(String(a.fim||a.inicio)));
+  const pend=L.filter(s=>!s.exp).length;
+  return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button></span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
+    ${L.length?`<button class="btn ${pend?"pri":""} big" type="button" id="bExp" style="margin-top:10px">⤓ Exportar leituras${pend?` (${pend} pendente${pend>1?"s":""})`:""}</button>`:""}</div>`}
+function focusScan(){const i=$("#scan");if(i&&!ui.lock&&!$(".ovl")&&!$(".cam"))setTimeout(()=>{try{i.focus({preventScroll:true})}catch(e){i.focus()}},30)}
+function wire(){
+  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  on("#bPac",()=>$("#fPac").click());
+  on("#bKb",()=>{ui.kb=!ui.kb;render()});
+  on("#bCam",openCam);
+  on("#bExp",exportar);
+  on("#bUndo",()=>{const s=cur();if(!s||!s.lidos.length)return;const x=s.lidos.pop();saveState();ui.flash={c:"dup",t:`Desfeito: P${x.p} ${g3(x.n)}`};render()});
+  on("#bFim",()=>{const s=cur();if(s){s.fim=nowISO();if(!s.lidos.length&&!s.alertas.length&&!s.desc.length)S.sessoes=S.sessoes.filter(z=>z!==s)}S.atual=null;ui.flash=null;saveState();render()});
+  document.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();render()});
+  const i=$("#scan");if(!i)return;
+  let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";if(v)onRead(v)};
+  on("#bGo",go);
+  i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
+  // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
+  i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
+  i.addEventListener("blur",()=>{if(!ui.kb)setTimeout(focusScan,250)})}
+
+// ---------- uma leitura ----------
+function onRead(raw){
+  if(ui.lock){sBad();return}
+  const s=cur(),v=String(raw).trim();
+  // sem sessão: pode ser um endereço de box digitado
+  if(!s){const k=IX.byAddr.get(normAddr(v));if(k&&!/^\d+$/.test(v)){startBoxPick(k,null);return}}
+  const P=scanParse(v);
+  if(!P||P.bad){ui.flash={c:"dup",t:"Código não reconhecido"};sDup();render();return}
+  const F=findFard(P,s&&s.lote);
+  if(!F){// fora do pacote
+    if(!s){sDup();showSheet(`<h3>Fardinho P${P.prensa||"?"} ${g3(P.num)} não está no pacote</h3><p>Provavelmente foi classificado depois da última sincronização. Sincronize (baixe um pacote novo) ou comece pelo endereço do box.</p><button class="btn pri big" type="button" data-x>OK</button>`);return}
+    s.desc.push({p:P.prensa||0,n:P.num,t:nowISO()});saveState();
+    lockScreen("warn",`<h3>⚠ FARDINHO FORA DO PACOTE</h3><p>P${P.prensa||"?"} ${g3(P.num)} não está no pacote deste aparelho (classificado depois da última sincronização?).</p><p><b>Não foi contado.</b> Confira na sincronização.</p>`,[["Entendi — continuar",unlock]]);return}
+  if(F.amb){showSheet(`<h3>Nº ${g3(P.num)} existe nas prensas ${F.amb.map(x=>x.p).join(" e ")}</h3><p>Qual é a deste fardinho?</p>${F.amb.map(x=>`<button class="btn big" type="button" data-amb="${x.p}" style="margin-bottom:8px">Prensa ${x.p} · lote ${esc(x.lote||"sem lote")}</button>`).join("")}`,o=>o.querySelectorAll("[data-amb]").forEach(b=>b.onclick=()=>{closeSheet();const F2=F.amb.find(x=>String(x.p)===b.dataset.amb);const s2=cur();if(s2)handleInSession(s2,F2,P);else startFromFard(F2)}));return}
+  if(!s){startFromFard(F);return}
+  handleInSession(s,F,P)}
+function handleInSession(s,F,P){
+  if(!s.lote){if(!F.lote){lockScreen("bad",`<h3>FARDINHO SEM LOTE</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI).</p>`,[["Retirei o fardo — continuar",unlock]]);sBad();return}s.lote=F.lote}
+  if(F.lote!==s.lote){s.alertas.push({p:F.p,n:F.n,lote:F.lote||"",t:nowISO()});s.fim=nowISO();saveState();sBad();
+    lockScreen("bad",`<h3>⚠ NÃO É DESTE LOTE</h3><p>Fardinho <b>P${F.p} ${g3(F.n)}</b> é do lote</p><div class="lt">${esc(F.lote||"SEM LOTE")}</div><p>${esc(F.lote?prodOfLote(F.lote):"aguardando HVI")}</p><p>Box <b>${esc(s.addr)}</b> está emblocando o lote <b>${esc(s.lote)}</b>.<br><b>Este fardo não foi contado.</b></p>`,[["Retirei o fardo — continuar",unlock]]);return}
+  const key=`${F.p}-${F.n}`;
+  if(prevLidos(s.lote,s.k).has(key)||s.lidos.some(x=>x.p===F.p&&x.n===F.n)){ui.flash={c:"dup",t:`Já lido: P${F.p} ${g3(F.n)} (não contou de novo)`};sDup();render();return}
+  s.lidos.push({p:F.p,n:F.n,t:nowISO()});s.fim=nowISO();s.exp=false;saveState();
+  const n=sessCount(s),meta=sessMeta(s);
+  ui.flash={c:"ok",t:`✓ P${F.p} ${g3(F.n)}`};sOk();if(meta&&n===meta)setTimeout(()=>{beep(1500,120,3);vib([100,60,100])},150);
+  if(meta&&n>meta)ui.flash={c:"dup",t:`✓ P${F.p} ${g3(F.n)} · atenção: acima do saldo do lote (${meta})`};
+  render()}
+// 1º fardinho define o lote; o box vem dos boxes do lote no pacote (ou escolhido)
+function startFromFard(F){
+  if(!F.lote){sBad();showSheet(`<h3>Fardinho sem lote</h3><p>P${F.p} ${g3(F.n)} ainda não tem lote (aguardando HVI). Comece por outro fardinho ou pelo endereço do box.</p><button class="btn pri big" type="button" data-x>OK</button>`);return}
+  const L=IX.lotes.get(F.lote);
+  if(L&&L.expd){sBad();showSheet(`<h3>Lote ${esc(F.lote)} já expedido</h3><p>O pacote indica que este lote já foi expedido. Confira o fardinho.</p><button class="btn pri big" type="button" data-x>OK</button>`);return}
+  const bx=lotBoxes(F.lote);
+  showSheet(`<h3>Lote <span class="pill" style="font-size:22px">${esc(F.lote)}</span> · ${esc(prodOfLote(F.lote))}</h3>
+    ${bx.length?`<p>Em qual box você está emblocando?</p>${bx.map(b=>`<button class="btn big" type="button" data-k="${esc(b[0])}" style="margin-bottom:8px">BOX ${esc(b[1])}${b[2]!=null?` · ${b[2]} contado(s)`:""}</button>`).join("")}`:`<p>Este lote ainda não tem box no pátio. Digite o box onde ele está sendo emblocado:</p>`}
+    <input class="scan" id="bxIn" placeholder="Outro box (ex.: P2 R5 23A)" autocomplete="off" autocapitalize="characters" style="margin-top:6px"><button class="btn pri big" type="button" id="bxOk" style="margin-top:8px">Usar este box</button><button class="btn big" type="button" data-x style="margin-top:8px">Cancelar</button>`,
+    o=>{o.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{closeSheet();newSess(b.dataset.k,F)});
+      const ok=()=>{const k=IX.byAddr.get(normAddr($("#bxIn").value));if(!k){toast("Box não encontrado no pacote. Confira o endereço.");return}closeSheet();newSess(k,F)};
+      $("#bxOk").onclick=ok;$("#bxIn").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();ok()}}})}
+function startBoxPick(k){const B=IX.boxes.get(k);const ls=B.ls||[];
+  if(ls.length===1){newSess(k,null,ls[0]);return}
+  newSess(k,null,null);ui.flash={c:"idle",t:ls.length?`Box com ${ls.length} lotes (${ls.join(", ")}): leia o 1º fardinho para definir o lote`:"Leia o 1º fardinho para definir o lote"};render()}
+function newSess(k,F,lote){const B=IX.boxes.get(k);
+  // continua a sessão aberta do mesmo box + lote, se houver
+  const lt=F?F.lote:lote;let s=S.sessoes.find(z=>z.k===k&&z.lote===lt&&!z.exp&&lt);
+  if(!s){s={id:uid(),k,addr:B?B.addr:k,lote:lt||"",inicio:nowISO(),fim:null,lidos:[],alertas:[],desc:[],exp:false};S.sessoes.push(s)}
+  S.atual=s.id;ui.flash=null;saveState();render();if(F)handleInSession(s,F,null)}
+
+// ---------- tela travada (alerta) e folhas ----------
+function lockScreen(kind,html,btns){ui.lock=kind;const d=document.createElement("div");d.className="lock "+kind;d.id="lock";d.innerHTML=html+btns.map((b,i)=>`<button class="btn" type="button" data-b="${i}">${esc(b[0])}</button>`).join("");document.body.appendChild(d);
+  d.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>btns[+b.dataset.b][1]());const rep=setInterval(()=>{if(!ui.lock){clearInterval(rep);return}vib(200)},2500)}
+function unlock(){ui.lock=null;const d=$("#lock");if(d)d.remove();ui.flash={c:"idle",t:"Aguardando leitura…"};render()}
+function showSheet(html,init){closeSheet();const o=document.createElement("div");o.className="ovl";o.innerHTML=`<div class="sheet">${html}</div>`;document.body.appendChild(o);
+  o.onclick=e=>{if(e.target===o||e.target.hasAttribute("data-x"))closeSheet()};if(init)init(o)}
+function closeSheet(){document.querySelectorAll(".ovl").forEach(o=>o.remove());focusScan()}
+
+// ---------- menu ----------
+$("#bMenu").onclick=()=>showSheet(`<h3>Menu</h3>
+  <button class="btn big" type="button" id="mPac" style="margin-bottom:8px">📂 Carregar pacote novo</button>
+  <button class="btn big" type="button" id="mExp" style="margin-bottom:8px">⤓ Exportar leituras</button>
+  <button class="btn big" type="button" id="mDisp" style="margin-bottom:8px">✎ Nome deste aparelho (${esc(S.disp||"não definido")})</button>
+  <button class="btn big" type="button" id="mLimpa" style="margin-bottom:8px">🗑 Apagar leituras já exportadas</button>
+  <p class="hint">${PAC?`Pacote: ${fmt(PAC.f.length/3)} fardinhos · ${fmt(PAC.lotes.length)} lotes · gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR")}`:"Sem pacote."} · versão ${VER}</p>
+  <button class="btn big" type="button" data-x>Fechar</button>`,o=>{
+  $("#mPac").onclick=()=>{closeSheet();$("#fPac").click()};
+  $("#mExp").onclick=()=>{closeSheet();exportar()};
+  $("#mDisp").onclick=()=>{const v=prompt("Nome deste aparelho (ex.: Coletor 1, Celular Pedro):",S.disp||"");if(v!=null){S.disp=v.trim();saveState();closeSheet();render()}};
+  $("#mLimpa").onclick=()=>{const n=S.sessoes.filter(s=>s.exp).length;if(!n){toast("Nenhuma leitura exportada para apagar.");return}
+    if(confirm(`Apagar ${n} sessão(ões) já exportada(s) deste aparelho? Faça isso só depois de importar o arquivo no app principal.`)){S.sessoes=S.sessoes.filter(s=>!s.exp);if(!cur())S.atual=null;saveState();closeSheet();render()}}});
+
+// ---------- pacote ----------
+$("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  try{const j=JSON.parse(await f.text());if(j.tipo!=="rsp-coletor-pacote")throw 0;
+    PAC=j;IX=buildIndex(j);await DB.set("pacote",j);
+    // leituras que já entraram no sistema (estão no pacote novo) saem do aparelho
+    let rem=0;for(const s of S.sessoes){const pv=prevLidos(s.lote,s.k),n0=s.lidos.length;s.lidos=s.lidos.filter(x=>!pv.has(`${x.p}-${x.n}`));rem+=n0-s.lidos.length}
+    S.sessoes=S.sessoes.filter(s=>s.lidos.length||s.alertas.length&&!s.exp||s.id===S.atual);if(!cur())S.atual=null;await saveState();
+    render();toast(`Pacote carregado: ${fmt(j.f.length/3)} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
+  catch(err){toast("Arquivo inválido: escolha o pacote-coletor-…json gerado no app principal.",4000)}};
+
+// ---------- exportar leituras ----------
+async function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.length||s.desc.length);if(!ss.length){toast("Nenhuma leitura para exportar.");return}
+  const j={tipo:"rsp-coletor-leituras",v:1,disp:S.disp||"",app:VER,exportado:nowISO(),pacote:PAC?PAC.gerado:null,sessoes:ss.map(s=>({k:s.k,addr:s.addr,lote:s.lote,inicio:s.inicio,fim:s.fim,lidos:s.lidos,alertas:s.alertas,desc:s.desc}))};
+  const d=new Date(),p=n=>String(n).padStart(2,"0"),name=`leituras-coletor-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
+  const blob=new Blob([JSON.stringify(j)],{type:"application/json"});
+  let shared=false;
+  try{const file=new File([blob],name,{type:"application/json"});if(navigator.canShare&&navigator.canShare({files:[file]})&&/iPhone|iPad/.test(navigator.userAgent)){await navigator.share({files:[file],title:name});shared=true}}catch(e){if(e&&e.name==="AbortError")return}
+  if(!shared){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+  ss.forEach(s=>s.exp=true);await saveState();render();
+  showSheet(`<h3>Leituras exportadas</h3><p>Arquivo <b>${esc(name)}</b> salvo (pasta Downloads).</p><p>Com internet, abra o app principal › <b>Fardinhos a emblocar › 📟 Coletor › Importar leituras</b> e escolha este arquivo.</p><button class="btn pri big" type="button" data-x>OK</button>`)}
+
+// ---------- câmera (celular) ----------
+const ZXW="https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/iife/reader/index.js",ZXW_WASM="https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/reader/zxing_reader.wasm";
+let zxwP=null;function loadZXW(){if(window.ZXingWASM)return Promise.resolve();if(zxwP)return zxwP;zxwP=new Promise((ok,ko)=>{const s=document.createElement("script");s.src=ZXW;s.onload=()=>{try{const Z=window.ZXingWASM,ov={locateFile:(p,pre)=>/\.wasm$/.test(p)?ZXW_WASM:pre+p};if(Z.prepareZXingModule)Z.prepareZXingModule({overrides:ov});else if(Z.setZXingModuleOverrides)Z.setZXingModuleOverrides(ov)}catch(e){}ok()};s.onerror=()=>{zxwP=null;ko()};document.head.appendChild(s)});return zxwP}
+async function openCam(){
+  const c=document.createElement("div");c.className="cam";c.innerHTML=`<video playsinline muted autoplay></video><div class="tgt"></div><div class="cmsg" id="cMsg">Abrindo a câmera…</div><div class="cbar"><button class="btn big" type="button" id="cClose">Fechar câmera</button></div>`;document.body.appendChild(c);
+  const v=c.querySelector("video"),msg=t=>{const m=$("#cMsg");if(m)m.textContent=t};let stream=null,run=true,last="",lastT=0;
+  const close=()=>{run=false;try{stream&&stream.getTracks().forEach(t=>t.stop())}catch(e){}c.remove();focusScan()};$("#cClose").onclick=close;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});v.srcObject=stream;await v.play()}
+  catch(e){msg("Não foi possível abrir a câmera. Permita o acesso à câmera para este app nos ajustes.");return}
+  let bd=null;try{if("BarcodeDetector" in window)bd=new BarcodeDetector({formats:["qr_code","code_128","itf","data_matrix"]})}catch(e){bd=null}
+  if(!bd){try{await loadZXW()}catch(e){msg("Leitor não carregado: abra o app uma vez com internet para ele ficar disponível offline.");return}}
+  msg("Aponte para o QR code ou o código de barras");
+  const cv=document.createElement("canvas"),ctx=cv.getContext("2d",{willReadFrequently:true});
+  const tick=async()=>{if(!run)return;
+    if(v.readyState>=2&&!ui.lock&&!$(".ovl")){try{let txt=null;const W=v.videoWidth,H=v.videoHeight;
+      if(bd){const r=await bd.detect(v);const h=(r||[]).find(x=>scanParse(x.rawValue))||(r||[])[0];txt=h&&h.rawValue}
+      else{const sw=Math.round(W*.84),sh=Math.round(H*.5),sx=Math.round((W-sw)/2),sy=Math.round(H*.25),k=Math.min(1,1280/sw);cv.width=Math.round(sw*k);cv.height=Math.round(sh*k);ctx.drawImage(v,sx,sy,sw,sh,0,0,cv.width,cv.height);
+        const rs=await window.ZXingWASM.readBarcodes(ctx.getImageData(0,0,cv.width,cv.height),{tryHarder:true,formats:["QRCode","Code128","ITF","DataMatrix"],maxNumberOfSymbols:1});const h=(rs||[]).find(x=>x.text);txt=h&&h.text}
+      const t=Date.now();if(txt&&!(txt===last&&t-lastT<2500)){last=txt;lastT=t;onRead(txt)}}catch(e){}}
+    setTimeout(tick,bd?120:200)};tick()}
+
+// ---------- início ----------
+(async()=>{
+  try{const p=await DB.get("pacote");if(p){PAC=p;IX=buildIndex(p)}const st=await DB.get("estado");if(st)S={sessoes:[],atual:null,disp:"",...st}}catch(e){toast("Armazenamento do aparelho indisponível.")}
+  if(navigator.storage&&navigator.storage.persist)try{navigator.storage.persist()}catch(e){}
+  render();
+  if("serviceWorker" in navigator)try{await navigator.serviceWorker.register("sw.js")}catch(e){}
+  // mantém a tela acesa durante o emblocamento (quando suportado)
+  try{if(navigator.wakeLock){let wl=null;const req=async()=>{try{wl=await navigator.wakeLock.request("screen")}catch(e){}};req();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")req()})}}catch(e){}
+})();
+</script>
+</body>
+</html>
