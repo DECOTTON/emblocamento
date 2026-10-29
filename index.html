@@ -15,7 +15,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
 button{font:inherit;cursor:pointer}
-header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:10px 14px calc(10px);padding-top:max(10px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
+header{flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:10px 14px calc(10px);padding-top:max(10px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
 header h1{font-size:19px;margin:0;flex:1}
 header small{display:block;font-size:12px;opacity:.85;font-weight:500}
 .hb{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:7px 10px;font-size:14px;font-weight:700}
@@ -58,11 +58,14 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .cam .cmsg{position:absolute;left:0;right:0;top:12px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px #000}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1D2E2C;color:#fff;padding:10px 16px;border-radius:10px;z-index:60;font-weight:600;max-width:90vw;text-align:center}
 .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 6px}.tag.ok{background:#DDF3E3;color:#14552A}.tag.warn{background:var(--warnbg);color:#6B4100}
+.sbar{flex:1 1 100%;display:flex;gap:6px;margin-top:4px}.sbar .scan{flex:1;min-width:0;padding:10px 12px;font-size:19px;border:2px solid #F2C230}
+.sb{border:0;border-radius:10px;padding:0 12px;font-weight:800;font-size:16px;background:#fff;color:var(--ink)}.sb.pri{background:#F2C230}
 .hide{display:none!important}
 </style>
 </head>
 <body>
-<header><h1>📟 Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button></header>
+<header><h1>📟 Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button>
+<div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" placeholder="Aguardando leitura…"><button class="sb" id="bAbc" type="button" title="Trocar teclado">ABC</button><button class="sb" id="bGo" type="button">OK</button><button class="sb pri" id="bCam" type="button" title="Câmera">📷</button></div></header>
 <main id="app"></main>
 <input type="file" id="fPac" accept=".json,application/json" hidden>
 <script>
@@ -72,7 +75,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.0.1";
+const VER="1.1.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -135,6 +138,7 @@ function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
 
 // ---------- telas ----------
 function render(){
+  $("#sbar").classList.toggle("hide",!PAC);if(PAC)$("#scan").placeholder=cur()?"Aguardando leitura…":"Leia o 1º fardinho do box";
   $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
   const a=$("#app");
   if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
@@ -142,17 +146,14 @@ function render(){
     <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>${sessListHTML()}`;wire();return}
   const s=cur();
   if(!s){a.innerHTML=`<div class="card"><h2>Novo box</h2>
-      <input class="scan" id="scan" placeholder="Leia o 1º fardinho do box ou digite o box (P2 R5 23A)" autocomplete="off" autocapitalize="characters" ${ui.kb?'inputmode="text"':'inputmode="none"'}>
-      <div class="row" style="margin-top:8px"><button class="btn" type="button" id="bKb">${ui.kb?"Esconder teclado":"⌨ Digitar"}</button><button class="btn" type="button" id="bGo">OK</button><button class="btn pri" type="button" id="bCam">📷 Câmera</button></div>
-      <p class="hint">No coletor, aperte o <b>gatilho lateral</b> com esta tela aberta: a leitura entra sozinha neste campo. Se não entrar, toque uma vez no campo e tente de novo.</p><p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:"Nenhuma leitura recebida ainda."}</p></div>${sessListHTML()}`;wire();focusScan();return}
+      <p style="margin:0">Aperte o <b>gatilho</b> no <b>1º fardinho</b> do box (ou digite o endereço do box no campo amarelo, ex.: P2 R5 23A, usando <b>ABC</b>).</p>
+      <p class="hint">O campo amarelo no topo recebe as leituras. Se o teclado fechar, toque uma vez nele.</p><p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:"Nenhuma leitura recebida ainda."}</p></div>${sessListHTML()}`;wire();focusScan();return}
   const n=sessCount(s),meta=sessMeta(s),pc=meta?Math.min(100,Math.round(n/meta*100)):0,L=IX.lotes.get(s.lote);
   const fl=ui.flash||{c:"idle",t:"Aguardando leitura…"};
   a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="muted">${esc(prodOfLote(s.lote)||"")}</span></div>
      <div style="display:flex;align-items:center;gap:12px;margin-top:6px"><div><div class="muted" style="font-size:12px;font-weight:700">LOTE</div><span class="lote">${esc(s.lote||"?")}</span></div>
      <div style="flex:1"><div class="cnt">${fmt(n)}<small> / ${fmt(meta)}</small></div><div class="bar"><i style="width:${pc}%"></i></div></div></div>
      <div class="flash ${n>=meta&&meta?"done":fl.c}">${n>=meta&&meta&&fl.c!=="dup"?"✓ LOTE COMPLETO":fl.t}</div>
-     <input class="scan" id="scan" placeholder="Aguardando leitura… (ou digite o nº)" autocomplete="off" ${ui.kb?'inputmode="numeric"':'inputmode="none"'}>
-     <div class="row" style="margin-top:8px"><button class="btn" type="button" id="bKb">${ui.kb?"Esconder teclado":"⌨ Digitar"}</button><button class="btn" type="button" id="bGo">OK</button><button class="btn pri" type="button" id="bCam">📷 Câmera</button></div>
      <p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:""}</p>
      ${L&&L.boxes.length>1?`<p class="hint">Lote também em: ${L.boxes.filter(b=>b[0]!==s.k).map(b=>esc(b[1])).join(", ")}</p>`:""}
    </div>
@@ -164,23 +165,25 @@ function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.in
   const pend=L.filter(s=>!s.exp).length;
   return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button></span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
     ${L.length?`<button class="btn ${pend?"pri":""} big" type="button" id="bExp" style="margin-top:10px">⤓ Exportar leituras${pend?` (${pend} pendente${pend>1?"s":""})`:""}</button>`:""}</div>`}
-function focusScan(){const i=$("#scan");if(i&&!ui.lock&&!$(".ovl")&&!$(".cam"))setTimeout(()=>{try{i.focus({preventScroll:true})}catch(e){i.focus()}},30)}
+function focusScan(){const i=$("#scan");if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&document.activeElement!==i){try{i.focus({preventScroll:true})}catch(e){i.focus()}}}
 function wire(){
   const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on("#bPac",()=>$("#fPac").click());
-  on("#bKb",()=>{ui.kb=!ui.kb;render()});
-  on("#bCam",openCam);
   on("#bExp",exportar);
   on("#bUndo",()=>{const s=cur();if(!s||!s.lidos.length)return;const x=s.lidos.pop();saveState();ui.flash={c:"dup",t:`Desfeito: P${x.p} ${g3(x.n)}`};render()});
   on("#bFim",()=>{const s=cur();if(s){s.fim=nowISO();if(!s.lidos.length&&!s.alertas.length&&!s.desc.length)S.sessoes=S.sessoes.filter(z=>z!==s)}S.atual=null;ui.flash=null;saveState();render()});
   document.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();render()});
-  const i=$("#scan");if(!i)return;
-  let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";if(v)onRead(v)};
-  on("#bGo",go);
+}
+// campo de leitura fixo (nunca é recriado: o teclado do coletor continua aberto entre as leituras)
+(()=>{const i=$("#scan");let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";_pv="";if(v)onRead(v)};
+  $("#bGo").onclick=go;$("#bCam").onclick=openCam;
+  $("#bAbc").onclick=()=>{const t=i.inputMode==="text";i.inputMode=t?"numeric":"text";$("#bAbc").textContent=t?"ABC":"123";i.blur();i.focus()};
   i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
   // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
   i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
-  i.addEventListener("blur",()=>{if(!ui.kb)setTimeout(focusScan,250)})}
+  i.addEventListener("blur",()=>setTimeout(()=>{const a=document.activeElement;if(!a||a===document.body)focusScan()},300))})();
+// tocar num botão não tira o foco do campo de leitura (o teclado não fecha)
+document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn,label");if(b&&document.activeElement===$("#scan")&&b.id!=="bAbc")e.preventDefault()},true);
 // leitor do coletor: alguns modos colocam o texto no campo sem avisar a página (sem "input"/Enter).
 // Então o campo é vigiado: código completo parado por um instante → processa.
 let _pv="",_pt=0;
@@ -245,7 +248,7 @@ function newSess(k,F,lote){const B=IX.boxes.get(k);
 // ---------- tela travada (alerta) e folhas ----------
 function lockScreen(kind,html,btns){ui.lock=kind;const d=document.createElement("div");d.className="lock "+kind;d.id="lock";d.innerHTML=html+btns.map((b,i)=>`<button class="btn" type="button" data-b="${i}">${esc(b[0])}</button>`).join("");document.body.appendChild(d);
   d.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>btns[+b.dataset.b][1]());const rep=setInterval(()=>{if(!ui.lock){clearInterval(rep);return}vib(200)},2500)}
-function unlock(){ui.lock=null;const d=$("#lock");if(d)d.remove();ui.flash={c:"idle",t:"Aguardando leitura…"};render()}
+function unlock(){ui.lock=null;const d=$("#lock");if(d)d.remove();const i=$("#scan");if(i){i.value="";_pv=""}ui.flash={c:"idle",t:"Aguardando leitura…"};render();focusScan()}
 function showSheet(html,init){closeSheet();const o=document.createElement("div");o.className="ovl";o.innerHTML=`<div class="sheet">${html}</div>`;document.body.appendChild(o);
   o.onclick=e=>{if(e.target===o||e.target.hasAttribute("data-x"))closeSheet()};if(init)init(o)}
 function closeSheet(){document.querySelectorAll(".ovl").forEach(o=>o.remove());focusScan()}
