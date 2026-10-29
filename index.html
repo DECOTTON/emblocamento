@@ -60,6 +60,9 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 6px}.tag.ok{background:#DDF3E3;color:#14552A}.tag.warn{background:var(--warnbg);color:#6B4100}
 .sbar{flex:1 1 100%;display:flex;gap:6px;margin-top:4px}.sbar .scan{flex:1;min-width:0;padding:10px 12px;font-size:19px;border:2px solid #F2C230}
 .sb{border:0;border-radius:10px;padding:0 12px;font-weight:800;font-size:16px;background:#fff;color:var(--ink)}.sb.pri{background:#F2C230}
+.pkg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pkg span{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:3px}
+.pkg select{width:100%;font-size:17px;padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.pkb{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 8px;padding:8px 10px;background:#EEF1F0;border-radius:10px}.pkb b{font-size:18px}.pkb span{font-weight:700;color:var(--mut)}
 .hide{display:none!important}
 </style>
 </head>
@@ -75,7 +78,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.1.0";
+const VER="1.2.0";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -147,7 +150,7 @@ function render(){
   const s=cur();
   if(!s){a.innerHTML=`<div class="card"><h2>Novo box</h2>
       <p style="margin:0">Aperte o <b>gatilho</b> no <b>1º fardinho</b> do box (ou digite o endereço do box no campo amarelo, ex.: P2 R5 23A, usando <b>ABC</b>).</p>
-      <p class="hint">O campo amarelo no topo recebe as leituras. Se o teclado fechar, toque uma vez nele.</p><p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:"Nenhuma leitura recebida ainda."}</p></div>${sessListHTML()}`;wire();focusScan();return}
+      <p class="hint">O campo amarelo no topo recebe as leituras. Se o teclado fechar, toque uma vez nele.</p><p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:"Nenhuma leitura recebida ainda."}</p></div>${pickHTML()}${sessListHTML()}`;wire();wirePick();focusScan();return}
   const n=sessCount(s),meta=sessMeta(s),pc=meta?Math.min(100,Math.round(n/meta*100)):0,L=IX.lotes.get(s.lote);
   const fl=ui.flash||{c:"idle",t:"Aguardando leitura…"};
   a.innerHTML=`<div class="card"><div class="sess-h"><span class="bx">BOX ${esc(s.addr)}</span><span class="muted">${esc(prodOfLote(s.lote)||"")}</span></div>
@@ -161,6 +164,26 @@ function render(){
      <ul class="lst">${s.lidos.slice(-8).reverse().map(x=>`<li><span class="tag ok">✓</span><b>P${x.p} ${g3(x.n)}</b><span class="r muted">${new Date(x.t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></li>`).join("")||`<li class="muted">Nenhuma leitura ainda.</li>`}</ul>
      <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
   wire();focusScan()}
+// ---------- selecionar box (pátio › rua › lado › box), como na aba Campo do app principal ----------
+// chave do box: "pluma|<pátio>|<rua>|<posição>"; lado A = posição ímpar, B = par; nº do box = metade da posição
+function boxTree(){if(IX._tree)return IX._tree;const T=new Map();
+  for(const B of IX.boxes.values()){const[,bid,r,pos]=B.k.split("|"),p=+pos,sd=p%2?"A":"B",n=Math.ceil(p/2);
+    if(!T.has(bid))T.set(bid,new Map());const R=T.get(bid);if(!R.has(+r))R.set(+r,{A:[],B:[]});R.get(+r)[sd].push({n,...B})}
+  for(const R of T.values())for(const x of R.values()){x.A.sort((a,b)=>a.n-b.n);x.B.sort((a,b)=>a.n-b.n)}
+  return IX._tree=T}
+const patNome=bid=>{const P=(PAC.patios||[]).find(x=>x[0]===bid);if(P)return `${P[1]}${P[2]?" · "+P[2]:""}`;const B=[...IX.boxes.values()].find(x=>x.k.split("|")[1]===bid);return B?B.addr.split("-")[0]:bid};
+const boxTag=B=>B.ls&&B.ls.length?(B.ls.length>1?`${B.ls.length} lotes`:`lote ${B.ls[0]}`)+(B.mat?` + ${B.mat}`:""):B.mat?B.mat:"livre";
+function pickHTML(){const T=boxTree(),pk=ui.pk||(ui.pk={b:"",r:"",sd:"",k:""});const R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(+pk.r),L=X&&pk.sd?X[pk.sd]:[];
+  const opt=(v,t,sel)=>`<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`,B=pk.k&&IX.boxes.get(pk.k);
+  return `<div class="card"><h2>Ou selecione o box</h2><div class="pkg">
+    <div><span>Pátio</span><select id="pkB">${opt("","Selecione",!pk.b)}${[...T.keys()].map(b=>opt(b,patNome(b),pk.b===b)).join("")}</select></div>
+    <div><span>Rua</span><select id="pkR"${R?"":" disabled"}>${opt("","—",!pk.r)}${R?[...R.keys()].sort((a,b)=>a-b).map(r=>opt(r,"Rua "+r,+pk.r===r)).join(""):""}</select></div>
+    <div><span>Lado</span><select id="pkS"${X?"":" disabled"}>${opt("","—",!pk.sd)}${X?["A","B"].filter(z=>X[z].length).map(z=>opt(z,"Lado "+z,pk.sd===z)).join(""):""}</select></div>
+    <div><span>Box</span><select id="pkK"${L.length?"":" disabled"}>${opt("","—",!pk.k)}${L.map(x=>opt(x.k,`${x.addr.split("-").slice(1).join("-")} · ${boxTag(x)}`,pk.k===x.k)).join("")}</select></div></div>
+    ${B?`<div class="pkb"><b>BOX ${esc(B.addr)}</b><span>${esc(boxTag(B))}</span></div><button class="btn pri big" type="button" id="pkGo">Emblocar neste box</button>`:""}</div>`}
+function wirePick(){const pk=ui.pk,sel=(id,f)=>{const e=$(id);if(e)e.onchange=()=>{f(e.value);render()}};
+  sel("#pkB",v=>{pk.b=v;pk.r="";pk.sd="";pk.k=""});sel("#pkR",v=>{pk.r=v;pk.sd="";pk.k=""});sel("#pkS",v=>{pk.sd=v;pk.k=""});sel("#pkK",v=>{pk.k=v});
+  const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
 function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.inicio).localeCompare(String(a.fim||a.inicio)));
   const pend=L.filter(s=>!s.exp).length;
   return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button></span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
@@ -183,7 +206,7 @@ function wire(){
   i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
   i.addEventListener("blur",()=>setTimeout(()=>{const a=document.activeElement;if(!a||a===document.body)focusScan()},300))})();
 // tocar num botão não tira o foco do campo de leitura (o teclado não fecha)
-document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn,label");if(b&&document.activeElement===$("#scan")&&b.id!=="bAbc")e.preventDefault()},true);
+document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn");if(b&&document.activeElement===$("#scan")&&b.id!=="bAbc")e.preventDefault()},true);
 // leitor do coletor: alguns modos colocam o texto no campo sem avisar a página (sem "input"/Enter).
 // Então o campo é vigiado: código completo parado por um instante → processa.
 let _pv="",_pt=0;
