@@ -94,7 +94,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.9.1";
+const VER="1.9.2";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -182,7 +182,7 @@ function render(){
   $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
   const a=$("#app");
   if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
-    <ol><li>No app principal (com internet): <b>Fardinhos a emblocar › 📟 Coletor › Baixar pacote para o coletor</b>.</li><li>Aqui: toque em <b>Carregar pacote</b> e escolha o arquivo <b>pacote-coletor-…</b> (.txt ou .json) — da pasta Downloads ou do <b>Google Drive</b> (no seletor de arquivos, toque em ☰ e escolha <b>Drive</b>).</li></ol>
+    <ol><li>No app principal (com internet): <b>Fardinhos a emblocar › 📟 Coletor › Baixar pacote para o coletor</b>.</li><li>Aqui: toque em <b>Carregar pacote</b> e escolha o arquivo <b>Pacote para o coletor - …</b> (.txt ou .json) — da pasta Downloads ou do <b>Google Drive</b> (no seletor de arquivos, toque em ☰ e escolha <b>Drive</b>).</li></ol>
     <button class="btn pri big" type="button" id="bPac">📂 Carregar pacote</button></div>`;wire();return}
   const s=cur();
   if(!s){a.innerHTML=`${pickHTML()}`;wire();wirePick();focusScan();return}
@@ -439,7 +439,9 @@ function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.lengt
     const G=new Map();for(const x of s.lidos){const c=x.l||"";if(!G.has(c))G.set(c,[]);G.get(c).push({p:x.p,n:x.n,t:x.t})}
     const out=[...G.entries()].map(([c,l],i)=>({k:s.k,addr:s.addr,lote:c,div:true,inicio:s.inicio,fim:s.fim,lidos:l,alertas:i?[]:s.alertas,desc:i?[]:s.desc}));
     return out.length?out:[{k:s.k,addr:s.addr,lote:"",div:true,inicio:s.inicio,fim:s.fim,lidos:[],alertas:s.alertas,desc:s.desc}]})};
-  const d=new Date(),p=n=>String(n).padStart(2,"0"),name=`leituras-coletor-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.txt`;
+  // mesmo padrão de nome dos arquivos do app principal: "Base - Empresa - DD-MM-AAAA - HHhMMmSSs.txt"
+  const d=new Date(),p=n=>String(n).padStart(2,"0"),cl=t=>String(t||"").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim();
+  const name=`${cl("Leituras do coletor"+(S.disp?` (${S.disp})`:""))} - ${cl(PAC&&PAC.emp)||"Algodoeira"} - ${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()} - ${p(d.getHours())}h${p(d.getMinutes())}m${p(d.getSeconds())}s.txt`;
   const blob=new Blob([JSON.stringify(j)],{type:"text/plain"});let file=null,canSh=false;
   try{file=new File([blob],name,{type:"text/plain"});canSh=!!(navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){}
   const done=async(onde)=>{ss.forEach(s=>s.exp=true);await saveState();closeSheet();render();
