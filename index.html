@@ -91,7 +91,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.8.3";
+const VER="1.8.4";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -216,10 +216,11 @@ function buscaLote(v){const c=String(v||"").trim();ui.pkLote=c;ui.pkMsg="";if(!c
   ui.pkMsg=`Lote <b>${esc(c)}</b> · ${esc(L.prod||"")}${L.boxes.length>1?` · também em: ${L.boxes.slice(1).map(b=>`<a href="#" data-pkk="${esc(b[0])}">${esc(b[1])}</a>`).join(", ")}`:""}`;render()}
 function wirePick(){const pk=ui.pk;pkWire("pk",pk,()=>{ui.pkMsg="";render()});
   // Enter / "Buscar" do teclado do celular envia o formulário: busca sem precisar tocar no botão
-  const li=$("#pkLote"),fm=$("#pkForm");if(li&&fm){const go=()=>{buscaLote(li.value);focusScan()};
+  // depois da busca o teclado some (até tocar em "Emblocar neste box" ou no campo amarelo)
+  const li=$("#pkLote"),fm=$("#pkForm");if(li&&fm){const go=()=>{ui.kbOff=true;buscaLote(li.value);const a=document.activeElement;if(a&&a.blur)a.blur()};
     fm.onsubmit=e=>{e.preventDefault();go()};li.addEventListener("keyup",e=>{if(e.key==="Enter"||e.keyCode===13){e.preventDefault();go()}})}
   document.querySelectorAll("[data-pkk]").forEach(a=>a.onclick=e=>{e.preventDefault();const k=a.dataset.pkk,[,b,r,pos]=k.split("|");ui.pk={b,r:String(+r),sd:+pos%2?"A":"B",k};render()});
-  const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.pk={b:"",r:"",sd:"",k:""};ui.pkLote="";ui.pkMsg="";const i=$("#scan");if(i)i.value="";render();focusScan()};
+  const cl=$("#pkClr");if(cl)cl.onclick=()=>{ui.kbOff=false;ui.pk={b:"",r:"",sd:"",k:""};ui.pkLote="";ui.pkMsg="";const i=$("#scan");if(i)i.value="";render();focusScan()};
   const g=$("#pkGo");if(g)g.onclick=()=>{const k=pk.k;ui.pk={b:pk.b,r:pk.r,sd:pk.sd,k:""};startBoxPick(k);focusScan()}}
 // leituras no aparelho (pelo Menu)
 function openLeituras(){showSheet(`${sessListHTML()}<button class="btn big" type="button" data-x>Fechar</button>`,o=>{
@@ -232,7 +233,7 @@ function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.in
   const pend=L.filter(s=>!s.exp).length;
   return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · lote <span class="pill">${esc(s.lote||"?")}</span><br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button>${s.exp?"":` <button class="btn" type="button" data-del="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px;color:var(--bad)" title="Remover estas leituras">🗑</button>`}</span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
     ${L.length?`<button class="btn ${pend?"pri":""} big" type="button" id="bExp" style="margin-top:10px">⤓ Exportar leituras${pend?` (${pend} pendente${pend>1?"s":""})`:""}</button>`:""}</div>`}
-function focusScan(){const i=$("#scan");if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&document.activeElement!==i){try{i.focus({preventScroll:true})}catch(e){i.focus()}}}
+function focusScan(){const i=$("#scan");if(ui.kbOff)return;if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&document.activeElement!==i){try{i.focus({preventScroll:true})}catch(e){i.focus()}}}
 function wire(){
   const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on("#bPac",()=>$("#fPac").click());
@@ -245,6 +246,7 @@ function wire(){
 (()=>{const i=$("#scan");let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";_pv="";if(v)onRead(v)};
   $("#bGo").onclick=go;$("#bCam").onclick=openCam;
   i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
+  i.addEventListener("focus",()=>{ui.kbOff=false});
   // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
   i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
   i.addEventListener("blur",()=>setTimeout(()=>{const a=document.activeElement;if(!a||a===document.body)focusScan()},300))})();
@@ -339,7 +341,7 @@ function startFromFard(F){const L=F.lote?IX.lotes.get(F.lote):null;
 function startBoxPick(k){const B=IX.boxes.get(k);const ls=B.ls||[];
   if(ls.length===1){newSess(k,null,ls[0]);return}
   newSess(k,null,null);ui.flash={c:"idle",t:ls.length?`Box com ${ls.length} lotes (${ls.join(", ")}): leia o 1º fardinho para definir o lote`:"Leia o 1º fardinho para definir o lote"};render()}
-function newSess(k,F,lote){const B=IX.boxes.get(k);
+function newSess(k,F,lote){ui.kbOff=false;const B=IX.boxes.get(k);
   // continua a sessão aberta do mesmo box + lote, se houver
   const lt=F?F.lote:lote;let s=S.sessoes.find(z=>z.k===k&&z.lote===lt&&!z.exp&&lt);
   if(!s){s={id:uid(),k,addr:B?B.addr:k,lote:lt||"",inicio:nowISO(),fim:null,lidos:[],alertas:[],desc:[],exp:false};S.sessoes.push(s)}
