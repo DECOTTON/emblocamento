@@ -95,7 +95,7 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.10.0";
+const VER="1.10.1";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -133,7 +133,14 @@ const nFard=P=>Math.round(P.f.length/(P.fs||3));
 function applyRem(){if(!IX)return;for(const r of S.rem||[]){const B=IX.boxes.get(r.k);if(B&&B.ls)B.ls=B.ls.filter(c=>String(c)!==String(r.lote));
   const L=IX.lotes.get(String(r.lote));if(L)L.boxes=L.boxes.filter(b=>b[0]!==r.k);
   for(const v of (PAC.lidos&&PAC.lidos[r.lote+"|"+r.k])||[])if(IX.lidoEm.get(v)===r.k)IX.lidoEm.delete(v)}IX._tree=null}
-function rebuildIX(){if(PAC){IX=buildIndex(PAC);applyRem()}}
+// lotes emblocados neste aparelho depois do pacote: o box passa a mostrar o lote (e deixa de ser "material") até o próximo pacote
+function applyLocal(){if(!IX||!PAC)return;const t0=Date.parse(PAC.gerado)||0;let ch=false;
+  for(const s of S.sessoes||[]){if(!s.lidos||!s.lidos.length)continue;if(t0&&Date.parse(s.inicio)&&Date.parse(s.inicio)<t0)continue;
+    const B=IX.boxes.get(s.k);if(!B)continue;const lts=new Set();if(s.lote)lts.add(String(s.lote));if(s.div)for(const x of s.lidos)if(x.l)lts.add(String(x.l));
+    for(const c of lts){const ls=B.ls||[];if(!ls.map(String).includes(c)){if(B.mat&&!ls.length){B.matAnt=B.mat;B.mat=""}B.ls=[...ls,c];B.loc=true;ch=true} // cópia: não mexe no pacote
+      const L=IX.lotes.get(c);if(L&&!(L.boxes||[]).some(b=>b[0]===s.k)){L.boxes=[...(L.boxes||[]),[s.k,B.addr,null]];ch=true}}}
+  if(ch)IX._tree=null}
+function rebuildIX(){if(PAC){IX=buildIndex(PAC);applyRem();applyLocal()}}
 const rowLote=ri=>{const li=PAC.f[ri+2];return li>=0?PAC.lc[li]:""};
 const rowDate=(ri,o)=>{if(!PAC.dd||(PAC.fs||3)<5)return"";return PAC.dd[PAC.f[ri+o]]||""};
 const normAddr=s=>String(s||"").toUpperCase().replace(/[^0-9A-Z]/g,"");
@@ -183,7 +190,7 @@ function sessMeta(s){const L=IX&&IX.lotes.get(s.lote);if(L&&L.qtd)return Math.ma
 function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
 
 // ---------- telas ----------
-function render(){
+function render(){applyLocal();
   $("#sbar").classList.toggle("hide",!PAC);if(PAC)$("#scan").placeholder="Etiqueta SAI ou Nº do fardinho";
   $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
   const a=$("#app");
@@ -230,7 +237,7 @@ function boxTree(){if(IX._tree)return IX._tree;const T=new Map();
 const patNome=bid=>{const P=(PAC.patios||[]).find(x=>x[0]===bid);if(P)return `${P[1]}${P[2]?" · "+P[2]:""}`;const B=[...IX.boxes.values()].find(x=>x.k.split("|")[1]===bid);return B?B.addr.split("-")[0]:bid};
 // nº do box como na aba Campo: "1A" (com quadra: "Q2 · 3A")
 const boxCurto=a=>{const p=String(a).split("-"),q=p.find(x=>/^Q\d+$/.test(x));return (q?q+" · ":"")+p[p.length-1]};
-const boxTag=B=>B.ls&&B.ls.length?(B.ls.length>1?`${B.ls.length} lotes`:`lote ${B.ls[0]}`)+(B.mat?` + ${B.mat}`:""):B.mat?B.mat:"livre";
+const boxTag=B=>B.ls&&B.ls.length?(B.ls.length>1?`${B.ls.length} lotes`:`lote ${B.ls[0]}`)+(B.mat?` + ${B.mat}`:"")+(B.loc?" (aparelho)":""):B.mat?B.mat:"livre";
 function pkSelects(x,pk,noBtn){const T=boxTree(),R=pk.b&&T.get(pk.b),X=R&&pk.r&&R.get(+pk.r),L=X&&pk.sd?X[pk.sd]:[];
   const opt=(v,t,sel)=>`<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`,B=pk.k&&IX.boxes.get(pk.k);
   return `<div class="pkg">
@@ -289,7 +296,7 @@ function openLeituras(){showSheet(`${sessListHTML()}<button class="btn big" type
   o.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();closeSheet();render();focusScan()});
   o.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const z=S.sessoes.find(x=>x.id===b.dataset.del);if(!z)return;
     if(!confirm(`Remover as ${z.lidos.length} leitura(s) do box ${z.addr} (${z.div?"box diverso":"lote "+(z.lote||"?")})? Elas não serão exportadas.`))return;
-    S.sessoes=S.sessoes.filter(x=>x!==z);if(S.atual===z.id)S.atual=null;saveState();closeSheet();render();openLeituras();toast("Leituras removidas")});
+    S.sessoes=S.sessoes.filter(x=>x!==z);if(S.atual===z.id)S.atual=null;saveState();rebuildIX();closeSheet();render();openLeituras();toast("Leituras removidas")});
   o.querySelectorAll("[data-rdel]").forEach(b=>b.onclick=()=>{const r=(S.rem||[]).find(x=>x.id===b.dataset.rdel);if(!r)return;
     if(!confirm(`Desfazer a remoção do lote ${r.lote} do box ${r.addr}?`))return;S.rem=S.rem.filter(x=>x!==r);saveState();rebuildIX();closeSheet();render();openLeituras();toast("Remoção desfeita")});
   const e=o.querySelector("#bExp");if(e)e.onclick=()=>{closeSheet();exportar()}})}
@@ -453,7 +460,7 @@ $("#bMenu").onclick=()=>showSheet(`<h3>Menu</h3>
   $("#mExp").onclick=()=>{closeSheet();exportar()};
   $("#mDisp").onclick=()=>{const v=prompt("Nome deste aparelho (ex.: Coletor 1, Celular Pedro):",S.disp||"");if(v!=null){S.disp=v.trim();saveState();closeSheet();render()}};
   $("#mLimpa").onclick=()=>{const n=S.sessoes.filter(s=>s.exp).length;if(!n){toast("Nenhuma leitura exportada para apagar.");return}
-    if(confirm(`Apagar ${n} sessão(ões) já exportada(s) deste aparelho? Faça isso só depois de importar o arquivo no app principal.`)){S.sessoes=S.sessoes.filter(s=>!s.exp);if(!cur())S.atual=null;saveState();closeSheet();render()}}});
+    if(confirm(`Apagar ${n} sessão(ões) já exportada(s) deste aparelho? Faça isso só depois de importar o arquivo no app principal.`)){S.sessoes=S.sessoes.filter(s=>!s.exp);if(!cur())S.atual=null;saveState();rebuildIX();closeSheet();render()}}});
 
 // ---------- pacote ----------
 $("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
