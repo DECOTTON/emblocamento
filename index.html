@@ -102,8 +102,9 @@ body.mvon{overflow:hidden}
 .mvpat{background:var(--mfloor);border-radius:6px;padding:10px;margin:0 0 12px}
 .mvph{display:flex;align-items:center;gap:10px}.mvph b{font-size:19px;color:var(--mink)}
 .mvcar{width:36px;height:36px;border:1px solid var(--line);background:#fff;border-radius:6px;font-size:16px;color:var(--mink);flex:none}
-.mvz{display:grid;grid-template-columns:1fr 1.3fr 1fr 2fr;margin:10px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
-.mvz>*{border:0;border-right:1px solid var(--line);background:#fff;font:700 15px/1 system-ui;color:var(--mink);padding:10px 4px;text-align:center}.mvz>*:last-child{border-right:0}
+.mvz{display:flex;margin:10px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.mvz>*{flex:1 1 0;min-width:0;border:0;border-right:1px solid var(--line);background:#fff;font:600 14px/1 system-ui;color:var(--mink);padding:11px 2px;text-align:center}.mvz>*:last-child{border-right:0}
+.mvz [data-zf]{flex:1.6 1 0}.mvz [data-fs],.mvz [data-rot]{font-size:17px}.mvz .on{background:var(--acc);color:#fff}
 .mvst{margin:8px 0 6px;font-size:13.5px;color:#3E4A48}.mvst b{color:#1E7D3A}
 .mvwrap{overflow:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px 4px}
 .mvg{display:grid;gap:0;width:max-content}
@@ -136,6 +137,14 @@ body.mvon{overflow:hidden}
 .mvest span{font:700 13px/1.05 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
 .mvest.hyd{background:#C62828}.mvest.dim{opacity:.22}
 .mvpulse{animation:mvp 1s ease-in-out 3}@keyframes mvp{50%{transform:scale(1.08)}}
+.mvchips{display:flex;gap:8px;overflow-x:auto;padding:8px 10px 2px;background:var(--card);-webkit-overflow-scrolling:touch;scrollbar-width:none}.mvchips::-webkit-scrollbar{display:none}
+.mvchips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font:600 15px/1 system-ui,sans-serif;color:var(--ink);white-space:nowrap}
+.mvtool{display:flex;gap:8px;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+.mvtool button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 10px;font:600 15px/1 system-ui,sans-serif;color:var(--ink)}
+.mvbody.fsm{padding:6px}.mvpat.fs{margin:0;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column}.mvpat.fs .mvwrap{flex:1}
+.mvpat.fs.rot{position:fixed;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:0 0;transform:rotate(90deg);z-index:35;border-radius:0;overflow:hidden}
+.mvpat.fs.rot .mvwrap{overflow:auto}
+.mapv.fsmode .mvbar,.mapv.fsmode .mvchips,.mapv.fsmode .mvtool,.mapv.fsmode .mvhl{display:none}
 /* menu (padrão dos apps do coletor) */
 .mnu{display:flex;flex-direction:column;gap:2px;margin:0 0 8px}
 .mng{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:12px 2px 4px}.mng:first-child{margin-top:0}
@@ -165,7 +174,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.5";
+const VER="1.11.6";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -544,7 +553,7 @@ const mnI=(id,ic,t,sub,o)=>{o=o||{};return`<button class="mni${o.dg?" dg":""}" t
 const mnPac=()=>PAC?`Gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}`:"Nenhum pacote carregado";
 
 // ---------- mapa do pátio (desenho e lotes vêm do pacote; funciona sem internet) — mesmo visual do mapa do app principal ----------
-let MV={q:"",zp:{},hl:null,hlT:"",col:{}};
+let MV={q:"",zp:{},hl:null,hlT:"",col:{},fs:null,rot:false};
 const MV_CAT=["#E2CD86","#8FB3D1","#6FB08A","#CE8740","#B08CC4","#E89AA7","#9CC7C0","#D9A26B","#A8B86A","#7FA0B8","#E0B94F","#C58F8F"];
 const MV_SC={"AGUARDANDO LANÇAMENTO":["#5E35B1","#fff"],"⚠️CONTAR":["#F2C230","#1D2E2C"],"COMPLETO":["#2E9E4F","#fff"],"INCOMPLETO":["#C62828","#fff"],"RESTANTE":["#EF7D1A","#fff"]};
 let _mvL=null,_mvLP=null;
@@ -607,19 +616,24 @@ function mvRender(scroll){const el=$("#mapV");if(!el)return;
     <div class="mvbar"><div class="mvq"><input id="mvQ" type="text" inputmode="numeric" enterkeyhint="search" placeholder="🔍 Buscar lote" value="${esc(MV.q)}" autocomplete="off"><button type="button" id="mvQx" class="${MV.q?"":"hide"}" aria-label="Limpar">✕</button></div></div>
     ${MV.hl?`<div class="mvhl"><b>${esc(MV.hlT||"Lotes")}:</b> ${hlList.map(c=>{const o=onde(c);return`<button type="button" data-mq="${esc(c)}" class="${o.length?"":"nf"}">${esc(c)}<small>${o.length?esc(o.map(B=>B.addr).join(", ")):"sem box"}</small></button>`}).join("")}<button type="button" id="mvHlx" class="x">✕</button></div>`:""}
     ${q?`<div class="mvhl"><b>Lote ${esc(MV.q)}:</b> ${qBx.length?qBx.map(B=>`<button type="button" data-mpk="${esc(B.k)}">${esc(B.addr)}</button>`).join(""):`<span class="nf">não está em nenhum box deste pacote</span>`}</div>`:""}
-    <div class="mvleg">${legP}<span><i class="lf"></i>Livre</span><span><i class="lm"></i>Ocupado por material</span><span><i class="lb"></i>Bloqueado</span></div>
-    <div class="mvbody" id="mvB">${P.map(p=>{const bid=p.G[0],op=aberto(p),z=MV.zp[bid]||1;return`<section class="mvpat${op?"":" fech"}" data-pat="${esc(bid)}">
+    <div class="mvchips">${P.map(p=>`<button type="button" data-pj="${esc(p.G[0])}">${esc(mvPt(p.G[0]))}${mvPtN(p.G[0])?" · "+esc(mvPtN(p.G[0])):""}</button>`).join("")}</div>
+    <div class="mvtool"><button type="button" id="mvAll">${P.every(p=>!aberto(p))?"⊞ Mostrar todos":"⊟ Recolher todos"}</button></div>
+    <div class="mvbody${MV.fs?" fsm":""}" id="mvB">${P.filter(p=>!MV.fs||p.G[0]===MV.fs).map(p=>{const bid=p.G[0],isFs=MV.fs===bid,op=isFs||aberto(p),z=MV.zp[bid]||1;return`<section class="mvpat${op?"":" fech"}${isFs?" fs":""}${isFs&&MV.rot?" rot":""}" data-pat="${esc(bid)}">
       <div class="mvph"><button type="button" class="mvcar" data-tg="${esc(bid)}" aria-label="${op?"Recolher":"Mostrar"}">${op?"▾":"▸"}</button><b>${esc(mvPt(bid))}${mvPtN(bid)?" · "+esc(mvPtN(bid)):""}</b></div>
-      ${op?`<div class="mvz"><button type="button" data-zm="-1" data-zb="${esc(bid)}">−</button><span>${Math.round(z*100)}%</span><button type="button" data-zm="1" data-zb="${esc(bid)}">+</button><button type="button" data-zf="${esc(bid)}">Ajustar</button></div>
+      ${op?`<div class="mvz"><button type="button" data-zm="-1" data-zb="${esc(bid)}" aria-label="Diminuir">−</button><span>${Math.round(z*100)}%</span><button type="button" data-zm="1" data-zb="${esc(bid)}" aria-label="Aumentar">+</button><button type="button" data-zf="${esc(bid)}">Ajustar</button><button type="button" data-fs="${esc(bid)}" aria-label="${isFs?"Sair da tela cheia":"Tela cheia"}">${isFs?"✕":"⛶"}</button><button type="button" data-rot="${esc(bid)}" class="${isFs&&MV.rot?"on":""}" aria-label="Girar o mapa">⟳</button></div>
       <p class="mvst">${fmt(p.nOc)} de ${fmt(p.nBx)} boxes ocupados · <b>${fmt(p.nBx-p.nOc)} vagas disponíveis</b></p>
       <div class="mvwrap"><div class="mvg" data-nw="${p.nw}" style="grid-template-columns:${p.cols};grid-template-rows:${p.rws};zoom:${z}">${p.h}</div></div>`:""}</section>`}).join("")}</div>`;
-  el.querySelector("#mvX").onclick=closeMapa;
+  el.classList.toggle("fsmode",!!MV.fs);el.querySelector("#mvX").onclick=()=>{if(MV.fs){MV.fs=null;MV.rot=false;mvRender()}else closeMapa()};
   const qi=el.querySelector("#mvQ");qi.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();MV.q=qi.value.trim();MV.hl=null;MV.col={};MV.zp={};mvRender(true)}};qi.onchange=()=>{if(qi.value.trim()===MV.q)return;MV.q=qi.value.trim();MV.col={};MV.zp={};mvRender(true)};
   el.querySelector("#mvQx").onclick=()=>{MV.q="";MV.col={};mvRender()};
   const hx=el.querySelector("#mvHlx");if(hx)hx.onclick=()=>{MV.hl=null;MV.col={};mvRender()};
+  el.querySelectorAll("[data-pj]").forEach(b=>b.onclick=()=>{const id=b.dataset.pj;MV.col[id]=false;MV.fs=null;mvRender();const s2=el.querySelector(`.mvpat[data-pat="${CSS.escape(id)}"]`);if(s2)s2.scrollIntoView({block:"start",behavior:"smooth"})});
+  {const ba=el.querySelector("#mvAll");if(ba)ba.onclick=()=>{const fech=P.every(p=>!aberto(p));for(const p of P)MV.col[p.G[0]]=!fech;MV.fs=null;mvRender()}}
+  el.querySelectorAll("[data-fs]").forEach(b=>b.onclick=()=>{const id=b.dataset.fs;if(MV.fs===id){MV.fs=null;MV.rot=false}else{MV.fs=id;MV.col[id]=false}mvRender()});
+  el.querySelectorAll("[data-rot]").forEach(b=>b.onclick=()=>{const id=b.dataset.rot;if(MV.fs!==id){MV.fs=id;MV.col[id]=false;MV.rot=true}else MV.rot=!MV.rot;mvRender()});
   el.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{const id=b.dataset.tg,sec=b.closest(".mvpat");MV.col[id]=!sec.classList.contains("fech");mvRender()});
   el.querySelectorAll("[data-zm]").forEach(b=>b.onclick=()=>{const id=b.dataset.zb;MV.zp[id]=Math.min(1.6,Math.max(.1,+((MV.zp[id]||1)+(+b.dataset.zm)*.1).toFixed(2)));mvRender()});
-  el.querySelectorAll("[data-zf]").forEach(b=>b.onclick=()=>{const g=b.closest(".mvpat").querySelector(".mvg"),wr=b.closest(".mvpat").querySelector(".mvwrap");if(!g||!wr)return;const nat=+g.dataset.nw||g.scrollWidth;MV.zp[b.dataset.zf]=Math.max(.1,Math.min(1.6,+((wr.clientWidth-4)/nat).toFixed(2)));mvRender()});
+  el.querySelectorAll("[data-zf]").forEach(b=>b.onclick=()=>{const g=b.closest(".mvpat").querySelector(".mvg"),wr=b.closest(".mvpat").querySelector(".mvwrap");if(!g||!wr)return;const nat=+g.dataset.nw||g.scrollWidth;if(b.closest(".mvpat.rot")){const avail=b.closest(".mvpat").clientWidth-24;MV.zp[b.dataset.zf]=Math.max(.1,Math.min(1.6,+(avail/nat).toFixed(2)));mvRender();return}MV.zp[b.dataset.zf]=Math.max(.1,Math.min(1.6,+((wr.clientWidth-4)/nat).toFixed(2)));mvRender()});
   el.querySelectorAll("[data-mq]").forEach(b=>b.onclick=()=>{const o=onde(b.dataset.mq);if(o.length)mvGoto(o[0].k)});
   el.querySelectorAll("[data-mpk]").forEach(b=>b.onclick=()=>mvGoto(b.dataset.mpk));
   el.querySelectorAll(".mlc[data-k]").forEach(b=>b.onclick=()=>mvBoxInfo(b.dataset.k));
