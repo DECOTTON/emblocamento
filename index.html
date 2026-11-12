@@ -81,45 +81,64 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .pkfind{display:flex;gap:6px;margin-bottom:8px}.pkfind input{flex:1;min-width:0;font-size:17px;padding:10px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:#fff}.pkfind .btn{padding:8px 12px}
 .pkmsg{margin:0 0 8px;padding:8px 10px;border-radius:8px;background:#EEF1F0;font-size:14px}.pkmsg a{color:var(--acc);font-weight:700}
 .hide{display:none!important}
-/* mapa do pátio */
+/* mapa do pátio (mesmo visual do mapa do app principal) */
 body.mvon{overflow:hidden}
-.mapv{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column}
+.mapv{position:fixed;inset:0;z-index:30;background:#E6E9E7;display:flex;flex-direction:column;--mfloor:#D5DAD6;--maisle:#E3B53B;--mink:#1D2E2C}
 .mvh{background:var(--acc);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top))}
 .mvh h1{margin:0;font-size:19px;line-height:1.15;flex:1;min-width:0}.mvh h1 small{display:block;font-size:12px;font-weight:500;opacity:.85}
-.mvbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--line)}
-.mvtabs{display:flex;gap:4px;flex-wrap:wrap}
-.mvtabs button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 12px;font:800 15px/1 system-ui,sans-serif;color:var(--ink)}
-.mvtabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.mvq{position:relative;flex:1 1 150px;min-width:130px}
-.mvq input{width:100%;font:700 16px/1.2 system-ui,sans-serif;padding:9px 34px 9px 10px;border:2px solid var(--line);border-radius:8px;box-sizing:border-box}
+.mvbar{display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+.mvq{position:relative;flex:1}
+.mvq input{width:100%;font:700 17px/1.2 system-ui,sans-serif;padding:10px 36px 10px 12px;border:2px solid var(--line);border-radius:10px;box-sizing:border-box}
 .mvq input:focus{outline:none;border-color:var(--acc)}
 .mvq button{position:absolute;right:2px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:18px;padding:6px 8px;color:var(--mut)}
-.mvz{display:flex;gap:4px}.mvz button{width:40px;height:38px;border:1px solid var(--line);background:var(--card);border-radius:8px;font:800 20px/1 system-ui;color:var(--ink)}
 .mvhl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 10px;background:#FFF6D6;border-bottom:1px solid #F2C230;font-size:14px}
 .mvhl button{border:1px solid #E0B94F;background:#fff;border-radius:8px;padding:4px 9px;font:800 15px/1.15 system-ui;color:var(--ink);text-align:left}
 .mvhl button small{display:block;font-weight:600;font-size:11px;color:var(--mut)}
-.mvhl button.nf{opacity:.6}.mvhl .nf{color:var(--bad);font-weight:700}
-.mvhl .x{margin-left:auto;border:0;background:none;font-size:18px}
-.mvinfo{padding:6px 12px;font-size:13.5px;color:var(--mut)}.mvinfo b{color:var(--ink)}
-.mvwrap{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:4px 10px 12px;touch-action:pan-x pan-y}
-.mvg{display:grid;gap:2px;width:max-content}
-.mvc{box-sizing:border-box;min-width:0;min-height:0;position:relative}
-.mvb{border:1px solid rgba(0,0,0,.25);border-radius:5px;padding:2px 3px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;color:#10201E;font-family:system-ui,sans-serif;overflow:hidden}
-.mvb i{font-style:normal;font-size:10px;font-weight:700;opacity:.75;line-height:1}
-.mvb b{font-size:15px;font-weight:900;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.mvfree{background:#fff;border:1.5px dashed #9AA8A5}
-.mvmat b{font-size:10px;font-weight:700;white-space:normal}
-.mvloc{outline:3px solid var(--acc);outline-offset:-3px}.mvloc::after{content:"";position:absolute;right:3px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
-.mvdim{opacity:.35}
-.mvhit{outline:3px solid #D32F2F;outline-offset:-1px;opacity:1;z-index:1;box-shadow:0 0 0 3px rgba(211,47,47,.25)}
-.mvpulse{animation:mvp 1s ease-in-out 3}@keyframes mvp{50%{transform:scale(1.12)}}
-.mvblk{background:repeating-linear-gradient(45deg,#D9DEDC 0 5px,#EEF1F0 5px 10px);border:1px solid #B9C2BF;border-radius:5px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:9.5px;font-weight:700;color:#5B6664;text-align:center;overflow:hidden;line-height:1.05;padding:1px}
-.mvblk i{font-style:normal;font-size:10px;opacity:.8}
-.mvr{background:#F6E7B6;display:flex;align-items:center}.mvr span{position:sticky;left:0;font-size:10px;font-weight:900;letter-spacing:.06em;color:#7A5B00;padding-left:4px;white-space:nowrap}
-.mvt{background:#F6E7B6}
-.mvleg{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 12px;padding-bottom:max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card);font-size:12.5px;color:var(--mut)}
-.mvleg span{display:inline-flex;align-items:center;gap:5px}.mvleg i{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.2)}
-.mvleg i.lf{background:#fff;border:1.5px dashed #9AA8A5}.mvleg i.lb{background:repeating-linear-gradient(45deg,#D9DEDC 0 3px,#EEF1F0 3px 6px)}.mvleg i.ll{background:#fff;outline:2px solid var(--acc);outline-offset:-2px}
+.mvhl button.nf{opacity:.6}.mvhl .nf{color:var(--bad);font-weight:700}.mvhl .x{margin-left:auto;border:0;background:none;font-size:18px}
+.mvleg{display:flex;flex-wrap:wrap;gap:4px 12px;padding:7px 12px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mut)}
+.mvleg span{display:inline-flex;align-items:center;gap:5px}.mvleg i{width:14px;height:14px;border-radius:2px;display:inline-block;border:1px solid rgba(0,0,0,.2)}
+.mvleg i.lf{background:#fff}.mvleg i.lb{background:repeating-linear-gradient(45deg,rgba(163,59,43,.35) 0 3px,transparent 3px 6px);border-color:#A33B2B}.mvleg i.lm{background:repeating-linear-gradient(135deg,#B9824A 0 4px,#A8743F 4px 8px);border-color:#6D4520}
+.mvbody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 10px max(14px,env(safe-area-inset-bottom))}
+.mvpat{background:var(--mfloor);border-radius:6px;padding:10px;margin:0 0 12px}
+.mvph{display:flex;align-items:center;gap:10px}.mvph b{font-size:19px;color:var(--mink)}
+.mvcar{width:36px;height:36px;border:1px solid var(--line);background:#fff;border-radius:6px;font-size:16px;color:var(--mink);flex:none}
+.mvz{display:grid;grid-template-columns:1fr 1.3fr 1fr 2fr;margin:10px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+.mvz>*{border:0;border-right:1px solid var(--line);background:#fff;font:700 15px/1 system-ui;color:var(--mink);padding:10px 4px;text-align:center}.mvz>*:last-child{border-right:0}
+.mvst{margin:8px 0 6px;font-size:13.5px;color:#3E4A48}.mvst b{color:#1E7D3A}
+.mvwrap{overflow:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px 4px}
+.mvg{display:grid;gap:0;width:max-content}
+.mvcell{padding:2px;box-sizing:border-box;min-width:0;min-height:0}
+.mvrl{display:flex;align-items:center;justify-content:center;font:800 15px/1 system-ui,sans-serif;color:var(--mink)}
+.mvrua{position:relative;background:#F7F7F4;border-top:2px solid var(--maisle);border-bottom:2px solid var(--maisle);box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin:3px 0}
+.mvrua::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed var(--maisle)}
+.mvrua span{position:relative;background:#F7F7F4;padding:0 10px;font:800 13px/1 system-ui,sans-serif;letter-spacing:.12em;color:var(--mink)}
+.mvtv{position:relative;background:#F7F7F4;border-left:2px solid var(--maisle);border-right:2px solid var(--maisle);box-sizing:border-box;margin:0 3px}
+.mvtv::before{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:2px dashed var(--maisle)}
+.mvtv.x{border-color:transparent}.mvtv.x::before{display:none}
+.mapv .slot{position:relative;width:100%;height:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.55);border-radius:2px;padding:3px 4px;text-align:left;display:flex;flex-direction:column;justify-content:flex-start;gap:1px;overflow:hidden;font:11px/1.15 system-ui,sans-serif;color:#5E6B69;cursor:pointer}
+.mapv .slot>*{flex-shrink:0}
+.mapv .slot.full{border:1px solid rgba(0,0,0,.18);color:#1D2E2C;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.mapv .slot .bx{font:700 13px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--mink)}
+.mapv .slot .ln{font-size:10px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mapv .slot .ln i{font-style:normal;opacity:.7;font-weight:600}.mapv .slot .ln b{font-weight:700}
+.mapv .slot .lnum{align-self:flex-start;font:700 17px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;color:#0F1B1A;background:rgba(255,255,255,.82);padding:0 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mapv .slot .pic{position:absolute;top:3px;right:3px;font:700 10px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.06em;padding:2px 4px;border-radius:2px;background:#A33B2B;color:#fff}
+.mapv .slot .pic.pk{background:#C62828;color:#fff}.mapv .slot .pic.fc{background:#2E9E4F;color:#0B1A12}.mapv .slot .pic.dvs{background:#8D6E63;color:#fff}.mapv .slot .pic.mtpic{background:#6D4520;color:#fff;border:1px solid rgba(255,255,255,.55)}
+.mapv .slot .tags{display:flex;gap:4px;align-items:center;margin-top:2px;min-height:16px;overflow:hidden}.mapv .slot .tags.two{flex-direction:column;align-items:flex-start;gap:2px}
+.mapv .slot .ln.sit{align-self:flex-start;font-weight:700;font-size:10px;letter-spacing:.03em;padding:1px 5px;border-radius:2px;min-width:76px;text-align:center;box-sizing:border-box}
+.mapv .slot .ln.lcl{margin-top:auto;font-weight:800;color:var(--acc)}
+.mapv .slot .faddr{margin:auto;align-self:center;font:700 19px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:#0F1B1A;background:#E4EBE8;border:1px solid #C3CCC8;padding:5px 8px;border-radius:3px;white-space:nowrap}
+.mapv .slot .livre{margin:auto;align-self:center;background:#2E9E4F;color:#0B1A12;font:700 20px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.1em;padding:6px 16px;border-radius:3px}
+.mapv .slot.misto{background:repeating-linear-gradient(135deg,#EFE6D2 0 10px,#E6DBC2 10px 20px)!important;border:2px solid #8D6E63;color:#1D2E2C}
+.mapv .slot .ln.mx{display:flex;gap:4px;align-items:baseline;font-size:10.5px;line-height:1.3}.mapv .slot .ln.mx b{font:700 13px/1.2 "Barlow Condensed","Arial Narrow",system-ui;flex:none}.mapv .slot .ln.mx span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;opacity:.75}.mapv .slot .ln.mx em{font-style:normal;font-weight:700;flex:none}
+.mapv .slot.blocked{background:repeating-linear-gradient(45deg,rgba(163,59,43,.28) 0 4px,transparent 4px 9px);border:1px solid #A33B2B;color:#1D2E2C}
+.mapv .slot.blocked .code{font-size:11px;text-transform:uppercase;color:#A33B2B;font-weight:700;white-space:normal}
+.mapv .slot.blocked.mat{background:repeating-linear-gradient(135deg,#B9824A 0 8px,#A8743F 8px 16px)!important;border:2px solid #6D4520;color:#fff}.mapv .slot.blocked.mat .bx{color:#fff}
+.mapv .slot .ln.mtmo{white-space:normal;color:#fff;font-weight:700;font-size:12px;line-height:1.15;margin-top:3px}
+.mapv .slot.dim{opacity:.22}
+.mapv .slot.hit{outline:3px solid #1D2E2C;outline-offset:1px;z-index:1;opacity:1}
+.mapv .slot.loc{box-shadow:inset 0 0 0 3px var(--acc)}
+.mvpulse{animation:mvp 1s ease-in-out 3}@keyframes mvp{50%{transform:scale(1.08)}}
 /* menu (padrão dos apps do coletor) */
 .mnu{display:flex;flex-direction:column;gap:2px;margin:0 0 8px}
 .mng{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:12px 2px 4px}.mng:first-child{margin-top:0}
@@ -149,7 +168,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.1";
+const VER="1.11.2";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -527,78 +546,86 @@ const mnG=t=>`<div class="mng">${t}</div>`;
 const mnI=(id,ic,t,sub,o)=>{o=o||{};return`<button class="mni${o.dg?" dg":""}" type="button" id="${id}"><span class="ic">${ic}</span><span class="tx"><b>${t}</b>${sub?`<small>${sub}</small>`:""}</span>${o.bd?`<span class="bd">${o.bd}</span>`:""}<span class="ch">›</span></button>`};
 const mnPac=()=>PAC?`Gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}`:"Nenhum pacote carregado";
 
-// ---------- mapa do pátio (desenho e lotes vêm do pacote; funciona sem internet) ----------
-let MV={pat:null,q:"",z:1,hl:null,hlT:""};
+// ---------- mapa do pátio (desenho e lotes vêm do pacote; funciona sem internet) — mesmo visual do mapa do app principal ----------
+let MV={q:"",z:null,hl:null,hlT:"",col:{}};
 const MV_CAT=["#E2CD86","#8FB3D1","#6FB08A","#CE8740","#B08CC4","#E89AA7","#9CC7C0","#D9A26B","#A8B86A","#7FA0B8","#E0B94F","#C58F8F"];
-function mvLotes(){const m=new Map();for(const r of PAC.lotes||[])m.set(String(r[0]),{c:String(r[0]),prod:r[1]||"",qtd:r[2],exp:+r[3]||0,boxes:r[5]||[]});return m}
+const MV_SC={"AGUARDANDO LANÇAMENTO":["#5E35B1","#fff"],"⚠️CONTAR":["#F2C230","#1D2E2C"],"COMPLETO":["#2E9E4F","#fff"],"INCOMPLETO":["#C62828","#fff"],"RESTANTE":["#EF7D1A","#fff"]};
+let _mvL=null,_mvLP=null;
+function mvLotes(){if(_mvLP===PAC&&_mvL)return _mvL;const m=new Map();for(const r of PAC.lotes||[])m.set(String(r[0]),{c:String(r[0]),prod:r[1]||"",qtd:r[2],exp:+r[3]||0,boxes:r[5]||[],emb:r[8],sit:r[9]||"",rest:r[10]||"",den:r[11]!=null?String(r[11]):(r[2]!=null?fmt(r[2]):"—"),faz:r[12]||r[1]||""});_mvL=m;_mvLP=PAC;return m}
 function mvCor(prod,all){if(!prod)return"#D7DCDA";if(PAC.pc&&PAC.pc[prod])return PAC.pc[prod];const i=all.indexOf(prod);return i<0?"#D7DCDA":MV_CAT[i%MV_CAT.length]}
 const mvNorm=v=>String(v||"").trim().toUpperCase();
+const mvPt=p=>{const P=(PAC.patios||[]).find(x=>x[0]===p);return P?P[1]:p},mvPtN=p=>{const P=(PAC.patios||[]).find(x=>x[0]===p);return P&&P[2]?P[2]:""};
 function openMapa(opt){if(!PAC){toast("Carregue o pacote primeiro.");return}
   if(!(PAC.geo&&PAC.geo.length)){showSheet(`<h3>🗺 Mapa do pátio</h3><p class="hint" style="margin-top:0">Este pacote não tem o desenho dos pátios. No app principal (com internet), baixe um <b>pacote novo para o coletor</b> e carregue aqui.</p><button class="btn big" type="button" data-x>Fechar</button>`);return}
   opt=opt||{};MV.hl=opt.hl?new Set(opt.hl.map(String)):null;MV.hlT=opt.hlT||"";if(opt.q!=null)MV.q=opt.q;
-  if(!MV.pat||!PAC.geo.some(g=>g[0]===MV.pat))MV.pat=PAC.geo[0][0];
-  // abre no pátio do 1º lote destacado / buscado
-  const alvo=MV.hl&&MV.hl.size?[...MV.hl]:MV.q?[MV.q]:[];if(alvo.length){const bx=mvBoxes(),L=mvLotes();
-    for(const c of alvo){const hit=[...bx.values()].find(B=>(B.ls||[]).map(mvNorm).includes(mvNorm(c)))||((L.get(String(c))||{}).boxes||[]).map(b=>bx.get(b[0])).find(Boolean);if(hit){MV.pat=hit.k.split("|")[1];break}}}
   let el=$("#mapV");if(!el){el=document.createElement("div");el.id="mapV";el.className="mapv";document.body.appendChild(el)}
   {const i=$("#scan");if(i)i.blur()}document.body.classList.add("mvon");mvRender(true)}
 function closeMapa(){const el=$("#mapV");if(el)el.remove();document.body.classList.remove("mvon");closeSheet()}
-function mvRender(scroll){const el=$("#mapV");if(!el)return;const G=PAC.geo.find(g=>g[0]===MV.pat)||PAC.geo[0],[bid,h,w,rows,cel,est]=G;
-  const BX=mvBoxes(),L=mvLotes(),prods=[...new Set([...L.values()].map(l=>l.prod).filter(Boolean))].sort();
-  const at=new Map();for(const c of cel)at.set(c[1]+"|"+c[2],c);const E=new Map((est||[]).map(e=>[e[0]+"|"+e[1],e[2]]));
-  const q=mvNorm(MV.q),match=c=>q&&mvNorm(c)===q,hl=c=>MV.hl&&MV.hl.has(String(c));
-  // larguras: coluna só de rua/transversal fica estreita; linha só de rua fica baixa
+// um box no mesmo formato do mapa do app principal
+function mvSlot(k,B,blk,L,prods,q){const pos=+k.split("|")[3],bx=Math.ceil(pos/2)+(pos%2?"A":"B"),addr=B?B.addr:"";
+  if(blk)return{h:`<button type="button" class="slot blocked${q?" dim":""}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="code">${esc(blk)}</span></button>`,oc:0,hit:0};
+  const ls=(B&&B.ls||[]).map(String),hit=ls.some(c=>(q&&mvNorm(c)===q)||(MV.hl&&MV.hl.has(c))),dim=(q||MV.hl)&&!hit?" dim":"",hc=hit?" hit":"",loc=B&&B.loc?" loc":"";
+  if(!ls.length&&B&&B.mat)return{h:`<button type="button" class="slot blocked mat${dim}${loc}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="pic mtpic">OCUPADO</span><span class="ln mtmo">${esc(B.mat)}</span></button>`,oc:1,hit:0};
+  if(!ls.length)return{h:`<button type="button" class="slot${dim}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="faddr">${esc(addr)}</span><span class="livre">LIVRE</span></button>`,oc:0,hit:0};
+  if(ls.length>1)return{h:`<button type="button" class="slot full misto${dim}${hc}${loc}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="pic dvs">DIVERSOS</span>${ls.slice(0,5).map(c=>{const l=L.get(c)||{},bq=(l.boxes||[]).find(b=>b[0]===k);return`<span class="ln mx"><b>${esc(c)}</b><span>${esc(l.faz||l.prod||"")}</span>${bq&&bq[2]!=null?`<em>${fmt(bq[2])}</em>`:""}</span>`}).join("")}${ls.length>5?`<span class="ln">+${ls.length-5}</span>`:""}</button>`,oc:1,hit:hit?1:0};
+  const c=ls[0],l=L.get(c)||{c,prod:"",faz:"",qtd:null,den:"—",sit:"",rest:""},bq=(l.boxes||[]).find(b=>b[0]===k),pq=bq?bq[2]:null,cap=+PAC.cap||130;
+  const pic=l.qtd==null?"":+l.qtd===cap?`<span class="pic fc">FECHADO</span>`:`<span class="pic pk">PICADO</span>`;
+  const tag=t=>t&&MV_SC[t]?`<span class="ln sit" style="background:${MV_SC[t][0]};color:${MV_SC[t][1]}">${esc(t)}</span>`:"";
+  return{h:`<button type="button" class="slot full${dim}${hc}${loc}" style="background:${mvCor(l.prod,prods)}" data-k="${k}"><span class="bx">BOX ${bx}</span>${pic}
+    <span class="ln"><i>FAZENDA/PRODUTOR:</i></span><span class="ln"><b>${esc(l.faz||l.prod||"—")}</b></span><span class="ln"><i>LOTE:</i></span><b class="lnum">${esc(c)}</b>
+    <span class="ln"><i>QTD.:</i> <b>${pq==null||pq===""?"—":fmt(pq)}</b> / ${esc(l.den)}</span><span class="tags${l.rest?" two":""}">${tag(l.sit)}${tag(l.rest)}</span>${loc?`<span class="ln lcl">● lido neste coletor</span>`:""}</button>`,oc:1,hit:hit?1:0}}
+// um pátio: grade de células (b = box, r = rua, t = transversal, e = estrutura, . = vazio)
+function mvPatio(G,BX,L,prods,q){const[bid,h,w,rows,cel,est]=G,at=new Map();for(const c of cel)at.set(c[1]+"|"+c[2],c);const E=new Map((est||[]).map(e=>[e[0]+"|"+e[1],e[2]]));
   const colT=[...Array(w)].map((_,x)=>rows.every(r=>"tr.".includes(r[x]||"."))&&rows.some(r=>r[x]==="t")),rowR=rows.map(r=>!/[be]/.test(r));
   const rua=[];let R=0;rows.forEach((r,y)=>{if(r.includes("r")){if(!(y>0&&rua[y-1]))R++;rua[y]=R}else rua[y]=0});
-  let nOc=0,nBx=0,nHit=0,cells="";const usados=new Set();
-  for(let y=0;y<h;y++){const r=rows[y]||"";let lab=false;
-    for(let x=0;x<w;x++){const ch=r[x]||".",g=`grid-row:${y+1};grid-column:${x+1}`;
-      if(ch==="b"){const c=at.get(y+"|"+x);if(!c){cells+=`<div class="mvc mvv" style="${g}"></div>`;continue}
-        const[k,, ,blk]=c,B=BX.get(k),pos=+k.split("|")[3],lb=Math.ceil(pos/2)+(pos%2?"A":"B");nBx++;
-        if(blk){cells+=`<div class="mvc mvblk" style="${g}" data-k="${k}"><i>${esc(lb)}</i><span>${esc(blk)}</span></div>`;continue}
-        const ls=(B&&B.ls||[]).map(String),mat=B&&B.mat;if(ls.length||mat)nOc++;
-        const isHit=ls.some(c=>match(c)||hl(c));if(isHit)nHit++;ls.forEach(c=>{const l=L.get(c);if(l&&l.prod)usados.add(l.prod)});
-        const p0=ls.length?(L.get(ls[0])||{}).prod:"",bg=ls.length?(ls.length>1?"#C8BFB4":mvCor(p0,prods)):mat?"#B8956A":"";
-        cells+=`<button type="button" class="mvc mvb${ls.length?"":mat?" mvmat":" mvfree"}${B&&B.loc?" mvloc":""}${isHit?" mvhit":""}${(q||MV.hl)&&!isHit?" mvdim":""}" style="${g}${bg?`;background:${bg}`:""}" data-k="${k}"><i>${esc(lb)}</i><b>${ls.length?esc(ls.length>2?ls.slice(0,2).join("/")+"…":ls.join("/")):mat?esc(mat):""}</b></button>`}
-      else if(ch==="r"){cells+=`<div class="mvc mvr" style="${g}">${!lab?`<span>RUA ${rua[y]}</span>`:""}</div>`;lab=true}
-      else if(ch==="t")cells+=`<div class="mvc mvt" style="${g}"></div>`;
-      else if(ch==="e"){const t=E.get(y+"|"+x)||"";cells+=`<div class="mvc mvblk" style="${g}"><span>${esc(t)}</span></div>`}}}
-  const cw=Math.round(58*MV.z),ch2=Math.round(46*MV.z),tpl=colT.map(t=>t?Math.round(14*MV.z)+"px":cw+"px").join(" "),rtpl=rowR.map(t=>t?Math.round(18*MV.z)+"px":ch2+"px").join(" ");
-  const pt=p=>{const P=(PAC.patios||[]).find(x=>x[0]===p);return P?P[1]:p},ptN=p=>{const P=(PAC.patios||[]).find(x=>x[0]===p);return P&&P[2]?P[2]:""};
-  const legP=[...usados].sort().map(p=>`<span><i style="background:${mvCor(p,prods)}"></i>${esc(p)}</span>`).join("");
-  // onde estão os lotes destacados / buscados (em todos os pátios)
+  let h2="",nOc=0,nBx=0,nHit=0;
+  for(let y=0;y<h;y++){const r=(rows[y]||"").padEnd(w,".");
+    if(rua[y]&&!(y>0&&rua[y-1]===rua[y]))h2+=`<div class="mvrl" style="grid-row:${y+1}${rua[y+1]===rua[y]?"/span 2":""};grid-column:1">R${rua[y]}</div>`;
+    for(let x=0;x<w;){const ch=r[x],g=`grid-row:${y+1};grid-column:${x+2}`;
+      if(ch==="r"){let x2=x;while(x2<w&&r[x2]==="r")x2++;const ctr=!(y>0&&rua[y-1]===rua[y]);h2+=`<div class="mvrua" style="grid-row:${y+1};grid-column:${x+2}/${x2+2}">${ctr?`<span>RUA ${rua[y]}</span>`:""}</div>`;x=x2;continue}
+      if(ch==="t"){h2+=`<div class="mvtv${rowR[y]?" x":""}" style="${g}"></div>`;x++;continue}
+      if(ch==="b"){const c=at.get(y+"|"+x);if(c){const[k,, ,blk]=c,o=mvSlot(k,BX.get(k),blk,L,prods,q);nBx++;nOc+=o.oc;nHit+=o.hit;h2+=`<div class="mvcell" style="${g}">${o.h}</div>`}x++;continue}
+      if(ch==="e"){h2+=`<div class="mvcell" style="${g}"><button type="button" class="slot blocked${q?" dim":""}"><span class="code">${esc(E.get(y+"|"+x)||"estrutura")}</span></button></div>`}
+      x++}}
+  const cols="34px "+colT.map(t=>t?"44px":"128px").join(" "),rws=rowR.map(t=>t?"64px":"150px").join(" ");
+  return{h:h2,cols,rws,nOc,nBx,nHit}}
+function mvRender(scroll){const el=$("#mapV");if(!el)return;
+  const BX=mvBoxes(),L=mvLotes(),prods=[...new Set([...L.values()].map(l=>l.prod).filter(Boolean))].sort(),q=mvNorm(MV.q);
   const onde=c=>{const out=[];for(const B of BX.values())if((B.ls||[]).map(mvNorm).includes(mvNorm(c)))out.push(B);return out};
   const hlList=MV.hl?[...MV.hl]:[],qBx=q?onde(q):[];
-  el.innerHTML=`<header class="mvh"><button type="button" class="hb" id="mvX">← Voltar</button><h1>Mapa do pátio<small>Pacote de ${esc(new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}))} · não é em tempo real</small></h1></header>
-    <div class="mvbar"><div class="mvtabs">${PAC.geo.map(g=>`<button type="button" data-mp="${esc(g[0])}"${g[0]===bid?' class="on"':""}>${esc(pt(g[0]))}</button>`).join("")}</div>
-      <div class="mvq"><input id="mvQ" type="text" inputmode="numeric" enterkeyhint="search" placeholder="🔍 Buscar lote" value="${esc(MV.q)}" autocomplete="off"><button type="button" id="mvQx" class="${MV.q?"":"hide"}" aria-label="Limpar">✕</button></div>
-      <div class="mvz"><button type="button" id="mvZm" aria-label="Diminuir">−</button><button type="button" id="mvZp" aria-label="Aumentar">+</button></div></div>
+  const P=PAC.geo.map(G=>({G,...mvPatio(G,BX,L,prods,q)}));
+  // abre só os pátios com lote buscado/destacado; sem busca, todos abertos (como no app principal)
+  const temHit=P.some(p=>p.nHit),aberto=p=>MV.col[p.G[0]]!=null?!MV.col[p.G[0]]:(!temHit||p.nHit>0);
+  const z=MV.z||1,legP=[...new Set([...BX.values()].flatMap(B=>(B.ls||[]).map(c=>(L.get(String(c))||{}).prod).filter(Boolean)))].sort().map(p=>`<span><i style="background:${mvCor(p,prods)}"></i>${esc(p)}</span>`).join("");
+  el.innerHTML=`<header class="mvh"><button type="button" class="hb" id="mvX">← Voltar</button><h1>Pátio de pluma<small>Pacote de ${esc(new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}))} · não é em tempo real</small></h1></header>
+    <div class="mvbar"><div class="mvq"><input id="mvQ" type="text" inputmode="numeric" enterkeyhint="search" placeholder="🔍 Buscar lote" value="${esc(MV.q)}" autocomplete="off"><button type="button" id="mvQx" class="${MV.q?"":"hide"}" aria-label="Limpar">✕</button></div></div>
     ${MV.hl?`<div class="mvhl"><b>${esc(MV.hlT||"Lotes")}:</b> ${hlList.map(c=>{const o=onde(c);return`<button type="button" data-mq="${esc(c)}" class="${o.length?"":"nf"}">${esc(c)}<small>${o.length?esc(o.map(B=>B.addr).join(", ")):"sem box"}</small></button>`}).join("")}<button type="button" id="mvHlx" class="x">✕</button></div>`:""}
     ${q?`<div class="mvhl"><b>Lote ${esc(MV.q)}:</b> ${qBx.length?qBx.map(B=>`<button type="button" data-mpk="${esc(B.k)}">${esc(B.addr)}</button>`).join(""):`<span class="nf">não está em nenhum box deste pacote</span>`}</div>`:""}
-    <div class="mvinfo"><b>${esc(pt(bid))}${ptN(bid)?" · "+esc(ptN(bid)):""}</b> · ${fmt(nOc)} de ${fmt(nBx)} boxes ocupados</div>
-    <div class="mvwrap" id="mvW"><div class="mvg" style="grid-template-columns:${tpl};grid-template-rows:${rtpl}">${cells}</div></div>
-    <div class="mvleg">${legP}<span><i class="lf"></i>Livre</span><span><i style="background:#B8956A"></i>Material</span><span><i class="lb"></i>Bloqueado</span><span><i style="background:#C8BFB4"></i>Vários lotes</span><span><i class="ll"></i>Lido neste coletor</span></div>`;
+    <div class="mvleg">${legP}<span><i class="lf"></i>Livre</span><span><i class="lm"></i>Ocupado por material</span><span><i class="lb"></i>Bloqueado</span></div>
+    <div class="mvbody" id="mvB">${P.map(p=>{const bid=p.G[0],op=aberto(p);return`<section class="mvpat${op?"":" fech"}" data-pat="${esc(bid)}">
+      <div class="mvph"><button type="button" class="mvcar" data-tg="${esc(bid)}" aria-label="${op?"Recolher":"Mostrar"}">${op?"▾":"▸"}</button><b>${esc(mvPt(bid))}${mvPtN(bid)?" · "+esc(mvPtN(bid)):""}</b></div>
+      ${op?`<div class="mvz"><button type="button" data-zm="-1">−</button><span>${Math.round(z*100)}%</span><button type="button" data-zm="1">+</button><button type="button" data-zf="${esc(bid)}">Ajustar</button></div>
+      <p class="mvst">${fmt(p.nOc)} de ${fmt(p.nBx)} boxes ocupados · <b>${fmt(p.nBx-p.nOc)} vagas disponíveis</b></p>
+      <div class="mvwrap"><div class="mvg" style="grid-template-columns:${p.cols};grid-template-rows:${p.rws};zoom:${z}">${p.h}</div></div>`:""}</section>`}).join("")}</div>`;
   el.querySelector("#mvX").onclick=closeMapa;
-  el.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>{MV.pat=b.dataset.mp;mvRender(true)});
-  const qi=el.querySelector("#mvQ");qi.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();MV.q=qi.value.trim();MV.hl=null;mvGoFirst();mvRender(true)}};
-  qi.onchange=()=>{MV.q=qi.value.trim();mvGoFirst();mvRender(true)};
-  el.querySelector("#mvQx").onclick=()=>{MV.q="";mvRender()};
-  el.querySelector("#mvZm").onclick=()=>{MV.z=Math.max(.6,+(MV.z-.2).toFixed(1));mvRender()};
-  el.querySelector("#mvZp").onclick=()=>{MV.z=Math.min(1.8,+(MV.z+.2).toFixed(1));mvRender()};
-  const hx=el.querySelector("#mvHlx");if(hx)hx.onclick=()=>{MV.hl=null;mvRender()};
+  const qi=el.querySelector("#mvQ");qi.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();MV.q=qi.value.trim();MV.hl=null;MV.col={};mvRender(true)}};qi.onchange=()=>{MV.q=qi.value.trim();MV.col={};mvRender(true)};
+  el.querySelector("#mvQx").onclick=()=>{MV.q="";MV.col={};mvRender()};
+  const hx=el.querySelector("#mvHlx");if(hx)hx.onclick=()=>{MV.hl=null;MV.col={};mvRender()};
+  el.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{const id=b.dataset.tg,sec=b.closest(".mvpat");MV.col[id]=!sec.classList.contains("fech");mvRender()});
+  el.querySelectorAll("[data-zm]").forEach(b=>b.onclick=()=>{MV.z=Math.min(1.6,Math.max(.4,+((MV.z||1)+(+b.dataset.zm)*.1).toFixed(2)));mvRender()});
+  el.querySelectorAll("[data-zf]").forEach(b=>b.onclick=()=>{const g=b.closest(".mvpat").querySelector(".mvg"),wr=b.closest(".mvpat").querySelector(".mvwrap");if(!g||!wr)return;const nat=g.scrollWidth;MV.z=Math.max(.3,Math.min(1.6,+((wr.clientWidth-4)/nat).toFixed(2)));mvRender()});
   el.querySelectorAll("[data-mq]").forEach(b=>b.onclick=()=>{const o=onde(b.dataset.mq);if(o.length)mvGoto(o[0].k)});
   el.querySelectorAll("[data-mpk]").forEach(b=>b.onclick=()=>mvGoto(b.dataset.mpk));
-  el.querySelectorAll(".mvb[data-k],.mvblk[data-k]").forEach(b=>b.onclick=()=>mvBoxInfo(b.dataset.k));
-  if(scroll){const t=el.querySelector(".mvhit");if(t)setTimeout(()=>t.scrollIntoView({block:"center",inline:"center"}),30)}}
-function mvGoFirst(){if(!MV.q)return;const B=[...mvBoxes().values()].find(B=>(B.ls||[]).map(mvNorm).includes(mvNorm(MV.q)));if(B)MV.pat=B.k.split("|")[1]}
-function mvGoto(k){MV.pat=k.split("|")[1];mvRender();const el=$("#mapV"),t=el&&el.querySelector(`[data-k="${CSS.escape(k)}"]`);if(t){t.classList.add("mvpulse");t.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}}
+  el.querySelectorAll(".slot[data-k]").forEach(b=>b.onclick=()=>mvBoxInfo(b.dataset.k));
+  if(scroll){const t=el.querySelector(".slot.hit");if(t)setTimeout(()=>t.scrollIntoView({block:"center",inline:"center"}),40)}}
+function mvGoto(k){const bid=k.split("|")[1];MV.col[bid]=false;mvRender();const el=$("#mapV"),t=el&&el.querySelector(`.slot[data-k="${CSS.escape(k)}"]`);if(t){t.classList.add("mvpulse");t.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}}
 function mvBoxInfo(k){const B=mvBoxes().get(k),L=mvLotes(),G=PAC.geo.find(g=>g[0]===k.split("|")[1]),c=G&&G[4].find(x=>x[0]===k);
-  const ls=(B&&B.ls||[]).map(String),addr=B?B.addr:(c?k:"");
-  const li=ls.map(cd=>{const l=L.get(cd),q=l&&(l.boxes||[]).find(b=>b[0]===k);return`<li><div style="flex:1;min-width:0"><b style="font-size:20px">Lote ${esc(cd)}</b><br><small class="muted">${esc(l&&l.prod||"")}${l&&l.qtd?` · ${fmt(Math.max(0,l.qtd-(l.exp||0)))} fd de saldo`:""}${q&&q[2]!=null?` · ${fmt(q[2])} emblocado(s) aqui`:""}${l&&(l.boxes||[]).length>1?` · também em ${esc(l.boxes.filter(b=>b[0]!==k).map(b=>b[1]).join(", "))}`:""}</small></div></li>`}).join("");
+  const ls=(B&&B.ls||[]).map(String),addr=B?B.addr:"";
+  const li=ls.map(cd=>{const l=L.get(cd),q=l&&(l.boxes||[]).find(b=>b[0]===k);return`<li><div style="flex:1;min-width:0"><b style="font-size:20px">Lote ${esc(cd)}</b><br><small class="muted">${esc(l&&(l.faz||l.prod)||"")}${l&&l.qtd?` · ${fmt(Math.max(0,l.qtd-(l.exp||0)))} fd de saldo`:""}${q&&q[2]!=null?` · ${fmt(q[2])} emblocado(s) aqui`:""}${l&&l.sit?` · ${esc(l.sit)}`:""}${l&&(l.boxes||[]).length>1?` · também em ${esc(l.boxes.filter(b=>b[0]!==k).map(b=>b[1]).join(", "))}`:""}</small></div></li>`}).join("");
   showSheet(`<h3>Box ${esc(addr||"")}</h3>
     ${c&&c[3]?`<p class="hint" style="margin-top:0">Bloqueado: <b>${esc(c[3])}</b></p>`:B&&B.mat&&!ls.length?`<p class="hint" style="margin-top:0">Ocupado por material: <b>${esc(B.mat)}</b></p>`:""}
     ${ls.length?`<ul class="lst">${li}</ul>`:!(c&&c[3])&&!(B&&B.mat)?`<p class="hint" style="margin-top:0">Box livre.</p>`:""}
-    ${B&&B.loc?`<p class="hint">• Tem leitura feita neste coletor que ainda não foi importada no app principal.</p>`:""}
+    ${B&&B.loc?`<p class="hint">● Tem leitura feita neste coletor que ainda não foi importada no app principal.</p>`:""}
     ${typeof mvAcao==="function"?mvAcao(k,B):""}
     <button class="btn big" type="button" data-x style="margin-top:8px">Fechar</button>`,o=>{if(typeof mvAcaoInit==="function")mvAcaoInit(o,k,B)})}
 // o mapa usa os boxes já com as leituras e remoções deste aparelho
