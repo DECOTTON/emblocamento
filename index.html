@@ -131,6 +131,10 @@ body.mvon{overflow:hidden}
 .mni .bd{flex:none;background:#FFF2D6;color:#8A5A00;border:1px solid #F2C230;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:800}
 .mni.dg .ic{background:#FDECEC;color:var(--bad)}.mni.dg .tx b{color:var(--bad)}
 .mnv{text-align:center;font-size:12px;color:var(--mut);margin:6px 0 10px}
+.devrow{display:flex;align-items:center;gap:10px;margin:6px 0 4px}.devrow span{font:900 24px/1 system-ui,sans-serif;letter-spacing:.04em;color:var(--acc)}
+.devrow input{flex:1;min-width:0;font:900 28px/1 system-ui,sans-serif;padding:10px 12px;border:2px solid var(--line);border-radius:10px;text-align:center}
+.devrow input:focus{outline:none;border-color:var(--acc)}
+.devpv{margin:4px 0 12px;text-align:center;font-size:14px;color:var(--mut);font-weight:700}
 </style>
 </head>
 <body>
@@ -145,7 +149,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.0";
+const VER="1.11.1";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -496,6 +500,28 @@ function showSheet(html,init){closeSheet();{const i=$("#scan");if(i)i.blur()} //
   o.onclick=e=>{if(e.target===o||e.target.hasAttribute("data-x"))closeSheet()};if(init)init(o)}
 function closeSheet(){document.querySelectorAll(".ovl").forEach(o=>o.remove());focusScan()}
 
+// ---------- nome do coletor: padrão "COLETOR 01", o mesmo nos apps Marcação, Emblocamento e Carregamento deste aparelho ----------
+const DEV_LS="decotton-coletor-nome",DEV_RE=/^COLETOR \d{2,3}$/;
+const devFmt=n=>"COLETOR "+String(Math.max(1,Math.trunc(+n)||1)).padStart(2,"0");
+const devNum=v=>{const m=/coletor\D*0*(\d{1,3})\b/i.exec(String(v||""));return m?+m[1]:null};
+function devShared(){try{return localStorage.getItem(DEV_LS)||""}catch(e){return""}}
+function devSet(v){S.disp=v;try{localStorage.setItem(DEV_LS,v)}catch(e){}saveState()}
+function devInit(){const sh=devShared();
+  if(sh&&DEV_RE.test(sh)){if(S.disp!==sh){S.disp=sh;saveState()}}
+  else if(S.disp&&devNum(S.disp)!=null&&/^\s*coletor\s*\d{1,3}\s*$/i.test(S.disp))devSet(devFmt(devNum(S.disp)));
+  if(!DEV_RE.test(S.disp||""))setTimeout(()=>{if(!$(".ovl")&&!DEV_RE.test(S.disp||""))openDev(true)},900)}
+function openDev(first){const n=devNum(S.disp);
+  showSheet(`<h3>Nome deste coletor</h3>
+    <p class="hint" style="margin-top:0">${first?(S.disp?`Este aparelho está como <b>${esc(S.disp)}</b>. Para padronizar, informe o número do coletor.`:"Informe o número deste coletor."):"Informe o número do coletor."} O nome vale para os apps Marcação, Emblocamento e Carregamento neste aparelho e aparece nos arquivos importados no app principal.</p>
+    <div class="devrow"><span>COLETOR</span><input id="devN" type="number" inputmode="numeric" min="1" max="999" value="${n!=null?n:""}" placeholder="01" aria-label="Número do coletor"></div>
+    <p class="devpv" id="devPv">${n!=null?esc(devFmt(n)):"&nbsp;"}</p>
+    <button class="btn pri big" type="button" id="devOk"${n!=null?"":" disabled"}>Salvar</button>
+    <button class="btn big" type="button" data-x style="margin-top:8px">${first?"Depois":"Cancelar"}</button>`,o=>{
+    const i=o.querySelector("#devN"),pv=o.querySelector("#devPv"),ok=o.querySelector("#devOk");
+    const up=()=>{const v=+i.value;const valid=v>=1&&v<=999&&Number.isInteger(v);ok.disabled=!valid;pv.innerHTML=valid?esc(devFmt(v)):"&nbsp;"};
+    i.oninput=up;i.onkeydown=e=>{if(e.key==="Enter"&&!ok.disabled){e.preventDefault();ok.click()}};
+    ok.onclick=()=>{devSet(devFmt(+i.value));closeSheet();render();toast(`Nome do aparelho: ${S.disp}`)};
+    setTimeout(()=>{try{i.focus();i.select()}catch(e){}},80)})}
 // item do menu: ícone, título, detalhe e (opcional) contador de pendências
 const mnG=t=>`<div class="mng">${t}</div>`;
 const mnI=(id,ic,t,sub,o)=>{o=o||{};return`<button class="mni${o.dg?" dg":""}" type="button" id="${id}"><span class="ic">${ic}</span><span class="tx"><b>${t}</b>${sub?`<small>${sub}</small>`:""}</span>${o.bd?`<span class="bd">${o.bd}</span>`:""}<span class="ch">›</span></button>`};
@@ -584,14 +610,14 @@ $("#bMenu").onclick=()=>{const nP=S.sessoes.filter(z=>!z.exp&&(z.lidos.length||z
   ${mnG("Pátio")}${mnI("mMap","🗺","Mapa do pátio",PAC?"Boxes e lotes do pacote, com as leituras deste coletor":"Carregue um pacote para ver o mapa")}
   ${mnG("Leituras")}${mnI("mLei","📋","Leituras no aparelho","Sessões de emblocamento e remoções",{bd:nP?`${nP} pendente${nP>1?"s":""}`:""})}${mnI("mExp","⤓","Exportar leituras","Arquivo para importar no app principal")}
   ${mnG("Pacote")}${mnI("mPac","📂","Carregar pacote novo",PAC?`${mnPac()} · ${fmt(nFard(PAC))} fardinhos · ${fmt(PAC.lotes.length)} lotes`:mnPac())}
-  ${mnG("Aparelho")}${mnI("mDisp","✎","Nome deste aparelho",esc(S.disp||"não definido"))}${mnI("mLimpa","🗑","Apagar leituras já exportadas",nE?`${nE} sessão(ões) exportada(s)`:"Nenhuma leitura exportada",{dg:1})}
+  ${mnG("Aparelho")}${mnI("mDisp","✎","Nome deste aparelho",esc(S.disp||"não definido")+(DEV_RE.test(S.disp||"")?"":" · toque para padronizar"))}${mnI("mLimpa","🗑","Apagar leituras já exportadas",nE?`${nE} sessão(ões) exportada(s)`:"Nenhuma leitura exportada",{dg:1})}
   </div><p class="mnv">Emblocamento · versão ${VER}</p>
   <button class="btn big" type="button" data-x>Fechar</button>`,o=>{
   $("#mMap").onclick=()=>{closeSheet();openMapa()};
   $("#mPac").onclick=()=>{closeSheet();$("#fPac").click()};
   $("#mLei").onclick=()=>{closeSheet();openLeituras()};
   $("#mExp").onclick=()=>{closeSheet();exportar()};
-  $("#mDisp").onclick=()=>{const v=prompt("Nome deste aparelho (ex.: Coletor 1, Celular Pedro):",S.disp||"");if(v!=null){S.disp=v.trim();saveState();closeSheet();render()}};
+  $("#mDisp").onclick=()=>openDev();
   $("#mLimpa").onclick=()=>{const n=S.sessoes.filter(s=>s.exp).length;if(!n){toast("Nenhuma leitura exportada para apagar.");return}
     if(confirm(`Apagar ${n} sessão(ões) já exportada(s) deste aparelho? Faça isso só depois de importar o arquivo no app principal.`)){S.sessoes=S.sessoes.filter(s=>!s.exp);if(!cur())S.atual=null;saveState();rebuildIX();closeSheet();render()}}})};
 
@@ -653,6 +679,7 @@ async function openCam(){
 // ---------- início ----------
 (async()=>{
   try{const p=await DB.get("pacote");if(p){PAC=p;IX=buildIndex(p)}const st=await DB.get("estado");if(st)S={sessoes:[],atual:null,disp:"",rem:[],...st};if(!S.rem)S.rem=[];applyRem()}catch(e){toast("Armazenamento do aparelho indisponível.")}
+  devInit();
   if(navigator.storage&&navigator.storage.persist)try{navigator.storage.persist()}catch(e){}
   render();
   if("serviceWorker" in navigator)try{await navigator.serviceWorker.register("sw.js")}catch(e){}
