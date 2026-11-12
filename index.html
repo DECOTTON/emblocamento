@@ -108,38 +108,33 @@ body.mvon{overflow:hidden}
 .mvwrap{overflow:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px 4px}
 .mvg{display:grid;gap:0;width:max-content}
 .mvcell{padding:2px;box-sizing:border-box;min-width:0;min-height:0}
-.mvrl{display:flex;align-items:center;justify-content:center;font:800 15px/1 system-ui,sans-serif;color:var(--mink)}
-.mvrua{position:relative;background:#F7F7F4;border-top:2px solid var(--maisle);border-bottom:2px solid var(--maisle);box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin:3px 0}
+.mvrl{display:flex;align-items:center;justify-content:center;font:700 12px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;color:var(--mink)}
+.mvrua{position:relative;background:#F7F7F4;border-top:2px solid var(--maisle);border-bottom:2px solid var(--maisle);box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin:2px 0}
 .mvrua::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed var(--maisle)}
-.mvrua span{position:relative;background:#F7F7F4;padding:0 10px;font:800 13px/1 system-ui,sans-serif;letter-spacing:.12em;color:var(--mink)}
-.mvtv{position:relative;background:#F7F7F4;border-left:2px solid var(--maisle);border-right:2px solid var(--maisle);box-sizing:border-box;margin:0 3px}
+.mvrua span{position:relative;background:#F7F7F4;padding:0 8px;font:800 10px/1 system-ui,sans-serif;letter-spacing:.12em;color:var(--mink)}
+.mvtv{position:relative;background:#F7F7F4;border-left:2px solid var(--maisle);border-right:2px solid var(--maisle);box-sizing:border-box;margin:0 2px}
 .mvtv::before{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:2px dashed var(--maisle)}
-.mvtv.x{border-color:transparent}.mvtv.x::before{display:none}
-.mapv .slot{position:relative;width:100%;height:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.55);border-radius:2px;padding:3px 4px;text-align:left;display:flex;flex-direction:column;justify-content:flex-start;gap:1px;overflow:hidden;font:11px/1.15 system-ui,sans-serif;color:#5E6B69;cursor:pointer}
-.mapv .slot>*{flex-shrink:0}
-.mapv .slot.full{border:1px solid rgba(0,0,0,.18);color:#1D2E2C;box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.mapv .slot .bx{font:700 13px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--mink)}
-.mapv .slot .ln{font-size:10px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.mapv .slot .ln i{font-style:normal;opacity:.7;font-weight:600}.mapv .slot .ln b{font-weight:700}
-.mapv .slot .lnum{align-self:flex-start;font:700 17px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;color:#0F1B1A;background:rgba(255,255,255,.82);padding:0 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.mapv .slot .pic{position:absolute;top:3px;right:3px;font:700 10px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.06em;padding:2px 4px;border-radius:2px;background:#A33B2B;color:#fff}
-.mapv .slot .pic.pk{background:#C62828;color:#fff}.mapv .slot .pic.fc{background:#2E9E4F;color:#0B1A12}.mapv .slot .pic.dvs{background:#8D6E63;color:#fff}.mapv .slot .pic.mtpic{background:#6D4520;color:#fff;border:1px solid rgba(255,255,255,.55)}
-.mapv .slot .tags{display:flex;gap:4px;align-items:center;margin-top:2px;min-height:16px;overflow:hidden}.mapv .slot .tags.two{flex-direction:column;align-items:flex-start;gap:2px}
-.mapv .slot .ln.sit{align-self:flex-start;font-weight:700;font-size:10px;letter-spacing:.03em;padding:1px 5px;border-radius:2px;min-width:76px;text-align:center;box-sizing:border-box}
-.mapv .slot .ln.lcl{margin-top:auto;font-weight:800;color:var(--acc)}
-.mapv .slot .faddr{margin:auto;align-self:center;font:700 19px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:#0F1B1A;background:#E4EBE8;border:1px solid #C3CCC8;padding:5px 8px;border-radius:3px;white-space:nowrap}
-.mapv .slot .livre{margin:auto;align-self:center;background:#2E9E4F;color:#0B1A12;font:700 20px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.1em;padding:6px 16px;border-radius:3px}
-.mapv .slot.misto{background:repeating-linear-gradient(135deg,#EFE6D2 0 10px,#E6DBC2 10px 20px)!important;border:2px solid #8D6E63;color:#1D2E2C}
-.mapv .slot .ln.mx{display:flex;gap:4px;align-items:baseline;font-size:10.5px;line-height:1.3}.mapv .slot .ln.mx b{font:700 13px/1.2 "Barlow Condensed","Arial Narrow",system-ui;flex:none}.mapv .slot .ln.mx span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;opacity:.75}.mapv .slot .ln.mx em{font-style:normal;font-weight:700;flex:none}
-.mapv .slot.blocked{background:repeating-linear-gradient(45deg,rgba(163,59,43,.28) 0 4px,transparent 4px 9px);border:1px solid #A33B2B;color:#1D2E2C}
-.mapv .slot.blocked.est{align-items:center;justify-content:center;text-align:center;background:#4A5553;border:3px solid #F2C230;border-radius:3px;color:#fff}.mapv .slot.blocked.est .code{color:#fff;font:700 16px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;white-space:normal;overflow-wrap:anywhere;hyphens:auto}
-.mapv .slot.blocked.hyd{align-items:center;justify-content:center;text-align:center;background:#C62828;border:3px solid #F2C230;color:#fff}.mapv .slot.blocked.hyd .code{color:#fff}
-.mapv .slot.blocked .code{font-size:11px;text-transform:uppercase;color:#A33B2B;font-weight:700;white-space:normal}
-.mapv .slot.blocked.mat{background:repeating-linear-gradient(135deg,#B9824A 0 8px,#A8743F 8px 16px)!important;border:2px solid #6D4520;color:#fff}.mapv .slot.blocked.mat .bx{color:#fff}
-.mapv .slot .ln.mtmo{white-space:normal;color:#fff;font-weight:700;font-size:12px;line-height:1.15;margin-top:3px}
-.mapv .slot.dim{opacity:.22}
-.mapv .slot.hit{outline:3px solid #1D2E2C;outline-offset:1px;z-index:1;opacity:1}
-.mapv .slot.loc{box-shadow:inset 0 0 0 3px var(--acc)}
+
+.mapv .mlc{position:relative;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:4px 5px 5px;border:1px solid rgba(0,0,0,.15);border-radius:6px;background:#F4F1EA;color:#1D2E2C;text-align:left;font-family:system-ui,sans-serif;overflow:hidden;min-width:0}
+.mapv .mlc>*{flex-shrink:0}
+.mapv .mlc .mlx{font-size:10px;font-weight:800;opacity:.75;line-height:1.1}
+.mapv .mlc b{font:800 18px/1.05 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapv .mlc small{font-size:9px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85;line-height:1.2}
+.mapv .mlc i{font-style:normal;font-size:10px;font-weight:700;line-height:1.2}
+.mapv .mlc .mlsr{margin-top:auto;display:flex;gap:3px;max-width:100%;min-width:0}
+.mapv .mlc .mls{font-size:7.5px;font-weight:800;padding:1px 3px;border-radius:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.35}
+.mapv .mlc .mls.mlw{flex:none;padding:0 2px;font-size:8px}
+.mapv .mlc .mlp{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%}.mapv .mlp.pk{background:#C62828}.mapv .mlp.fc{background:#2E9E4F}
+.mapv .mlc.free{background:transparent;border:1px dashed #9AA6A2;color:#5E6B69}.mapv .mlc.free .mlv{color:#2E9E4F;font-size:16px}
+.mapv .mlc.blk{background:repeating-linear-gradient(135deg,#E6E2D8 0 6px,#D8D3C7 6px 12px);color:#555}.mapv .mlc.blk .mlv{font-size:12px;white-space:normal;text-transform:uppercase}
+.mapv .mlc.matb{background:#E8D3B5}.mapv .mlc.matb b{font-size:13px}
+.mapv .mlc.mix{background:repeating-linear-gradient(135deg,#EFE6D2 0 8px,#E6DBC2 8px 16px);border:1px solid #8D6E63}.mapv .mlc.mix b{font-size:14px}
+.mapv .mlc.dim{opacity:.22}
+.mapv .mlc.hit{outline:3px solid #F9A825;outline-offset:-1px;z-index:2;opacity:1}
+.mapv .mlc.loc{box-shadow:inset 0 0 0 3px var(--acc)}
+.mvest{width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;background:#4A5553;border:3px solid #F2C230;border-radius:4px;color:#fff;padding:2px;overflow:hidden}
+.mvest span{font:700 13px/1.05 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
+.mvest.hyd{background:#C62828}.mvest.dim{opacity:.22}
 .mvpulse{animation:mvp 1s ease-in-out 3}@keyframes mvp{50%{transform:scale(1.08)}}
 /* menu (padrão dos apps do coletor) */
 .mnu{display:flex;flex-direction:column;gap:2px;margin:0 0 8px}
@@ -170,7 +165,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.3";
+const VER="1.11.4";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -563,25 +558,24 @@ function openMapa(opt){if(!PAC){toast("Carregue o pacote primeiro.");return}
   let el=$("#mapV");if(!el){el=document.createElement("div");el.id="mapV";el.className="mapv";document.body.appendChild(el)}
   {const i=$("#scan");if(i)i.blur()}document.body.classList.add("mvon");mvRender(true)}
 function closeMapa(){const el=$("#mapV");if(el)el.remove();document.body.classList.remove("mvon");closeSheet()}
-// um box no mesmo formato do mapa do app principal
-function mvSlot(k,B,blk,L,prods,q){const pos=+k.split("|")[3],bx=Math.ceil(pos/2)+(pos%2?"A":"B"),addr=B?B.addr:"";
-  if(blk)return{h:`<button type="button" class="slot blocked${q?" dim":""}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="code">${esc(blk)}</span></button>`,oc:0,hit:0};
+// um box no mesmo formato do mapa do app principal no celular (cartão compacto)
+function mvSlot(k,B,blk,L,prods,q){const pos=+k.split("|")[3],bx=Math.ceil(pos/2)+(pos%2?"A":"B");
+  if(blk)return{h:`<button type="button" class="mlc blk${q||MV.hl?" dim":""}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b class="mlv">${esc(blk)}</b></button>`,oc:0,hit:0};
   const ls=(B&&B.ls||[]).map(String),hit=ls.some(c=>(q&&mvNorm(c)===q)||(MV.hl&&MV.hl.has(c))),dim=(q||MV.hl)&&!hit?" dim":"",hc=hit?" hit":"",loc=B&&B.loc?" loc":"";
-  if(!ls.length&&B&&B.mat)return{h:`<button type="button" class="slot blocked mat${dim}${loc}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="pic mtpic">OCUPADO</span><span class="ln mtmo">${esc(B.mat)}</span></button>`,oc:1,hit:0};
-  if(!ls.length)return{h:`<button type="button" class="slot${dim}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="faddr">${esc(addr)}</span><span class="livre">LIVRE</span></button>`,oc:0,hit:0};
-  if(ls.length>1)return{h:`<button type="button" class="slot full misto${dim}${hc}${loc}" data-k="${k}"><span class="bx">BOX ${bx}</span><span class="pic dvs">DIVERSOS</span>${ls.slice(0,5).map(c=>{const l=L.get(c)||{},bq=(l.boxes||[]).find(b=>b[0]===k);return`<span class="ln mx"><b>${esc(c)}</b><span>${esc(l.faz||l.prod||"")}</span>${bq&&bq[2]!=null?`<em>${fmt(bq[2])}</em>`:""}</span>`}).join("")}${ls.length>5?`<span class="ln">+${ls.length-5}</span>`:""}</button>`,oc:1,hit:hit?1:0};
+  if(!ls.length&&B&&B.mat)return{h:`<button type="button" class="mlc full matb${dim}${loc}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b>${esc(String(B.mat).toUpperCase())}</b><small>material</small></button>`,oc:1,hit:0};
+  if(!ls.length)return{h:`<button type="button" class="mlc free${dim}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b class="mlv">livre</b></button>`,oc:0,hit:0};
+  if(ls.length>1){const tot=ls.reduce((t,c)=>{const bq=((L.get(c)||{}).boxes||[]).find(b=>b[0]===k);return t+(bq&&bq[2]!=null?+bq[2]:0)},0);
+    return{h:`<button type="button" class="mlc full mix${dim}${hc}${loc}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b>DIVERSOS</b><small>${esc(ls.slice().sort((a,b)=>a.localeCompare(b,"pt-BR",{numeric:true})).join(", "))}</small><i>${fmt(tot)} fd</i></button>`,oc:1,hit:hit?1:0}}
   const c=ls[0],l=L.get(c)||{c,prod:"",faz:"",qtd:null,den:"—",sit:"",rest:""},bq=(l.boxes||[]).find(b=>b[0]===k),pq=bq?bq[2]:null,cap=+PAC.cap||130;
-  const pic=l.qtd==null?"":+l.qtd===cap?`<span class="pic fc">FECHADO</span>`:`<span class="pic pk">PICADO</span>`;
-  const tag=t=>t&&MV_SC[t]?`<span class="ln sit" style="background:${MV_SC[t][0]};color:${MV_SC[t][1]}">${esc(t)}</span>`:"";
-  return{h:`<button type="button" class="slot full${dim}${hc}${loc}" style="background:${mvCor(l.prod,prods)}" data-k="${k}"><span class="bx">BOX ${bx}</span>${pic}
-    <span class="ln"><i>FAZENDA/PRODUTOR:</i></span><span class="ln"><b>${esc(l.faz||l.prod||"—")}</b></span><span class="ln"><i>LOTE:</i></span><b class="lnum">${esc(c)}</b>
-    <span class="ln"><i>QTD.:</i> <b>${pq==null||pq===""?"—":fmt(pq)}</b> / ${esc(l.den)}</span><span class="tags${l.rest?" two":""}">${tag(l.sit)}${tag(l.rest)}</span>${loc?`<span class="ln lcl">● lido neste coletor</span>`:""}</button>`,oc:1,hit:hit?1:0}}
+  const pic=l.qtd==null?"":`<span class="mlp ${+l.qtd===cap?"fc":"pk"}" title="${+l.qtd===cap?"Fechado":"Picado"}"></span>`;
+  const sc=t=>MV_SC[t]||["#ccc","#1D2E2C"];
+  return{h:`<button type="button" class="mlc full${dim}${hc}${loc}" style="background:${mvCor(l.prod,prods)}" data-k="${k}"><span class="mlx">${esc(bx)}</span>${pic}<b>${esc(c)}</b><small>${esc(l.faz||l.prod||"—")}</small><i>${pq==null||pq===""?"—":fmt(pq)} / ${esc(l.den)}</i>${l.sit?`<span class="mlsr"><span class="mls" style="background:${sc(l.sit)[0]};color:${sc(l.sit)[1]}">${esc(l.sit)}</span>${l.rest==="⚠️CONTAR"?`<span class="mls mlw" style="background:${sc("⚠️CONTAR")[0]};color:${sc("⚠️CONTAR")[1]}">⚠️</span>`:""}</span>`:""}</button>`,oc:1,hit:hit?1:0}}
 // um pátio: grade de células (b = box, r = rua, t = transversal, e = estrutura, . = vazio)
 function mvPatio(G,BX,L,prods,q){const[bid,h,w,rows,cel,est]=G,at=new Map();for(const c of cel)at.set(c[1]+"|"+c[2],c);const E=new Map((est||[]).map(e=>[e[0]+"|"+e[1],e[2]]));
   // estruturas mescladas (mesmo grupo): um bloco só cobrindo as células, como no app principal
   const grp=new Map(),inG=new Set();for(const e of est||[])if(e[3]){const g=grp.get(e[3])||{t:e[2],y0:1e9,y1:-1,x0:1e9,x1:-1,n:0};g.y0=Math.min(g.y0,e[0]);g.y1=Math.max(g.y1,e[0]);g.x0=Math.min(g.x0,e[1]);g.x1=Math.max(g.x1,e[1]);g.n++;grp.set(e[3],g)}
   for(const[gid,g]of grp)if(g.n>1){for(const e of est)if(e[3]===gid)inG.add(e[0]+"|"+e[1])}else grp.delete(gid);
-  const mk=t=>`<button type="button" class="slot blocked${/hidrante/i.test(t)?" hyd":" est"}${q?" dim":""}"><span class="code">${esc(t||"estrutura")}</span></button>`;
+  const mk=t=>`<div class="mvest${/hidrante/i.test(t)?" hyd":""}${q||MV.hl?" dim":""}"><span>${esc(t||"estrutura")}</span></div>`;
   const colT=[...Array(w)].map((_,x)=>rows.every(r=>"tr.".includes(r[x]||"."))&&rows.some(r=>r[x]==="t")),rowR=rows.map(r=>!/[be]/.test(r));
   const rua=[];let R=0;rows.forEach((r,y)=>{if(r.includes("r")){if(!(y>0&&rua[y-1]))R++;rua[y]=R}else rua[y]=0});
   let h2="",nOc=0,nBx=0,nHit=0;
@@ -597,7 +591,9 @@ function mvPatio(G,BX,L,prods,q){const[bid,h,w,rows,cel,est]=G,at=new Map();for(
   // tamanhos: os do app principal (vêm no pacote); pacote antigo usa o padrão (box 128 × 146, rua 60, vazio 10)
   const W=G[6]||[...Array(w)].map((_,x)=>{let hb=0,ht=0,hr=0;for(const r of rows){const c=r[x]||".";if(c==="b"||c==="e")hb=1;else if(c==="t")ht=1;else if(c==="r")hr=1}return hb?128:ht?60:hr?128:10}),
     H=G[7]||rows.map(r=>/[be]/.test(r)?146:r.includes("r")?60:10);
-  const cols="34px "+W.map(v=>v+"px").join(" "),rws=H.map(v=>v+"px").join(" "),nw=34+W.reduce((a,b)=>a+b,0);
+  // mesma escala do mapa do app principal no celular (box 84 × 84)
+  const W2=W.map(v=>Math.max(4,Math.round(v*.656))),H2=H.map(v=>Math.max(4,Math.round(v*.575)));
+  const cols="30px "+W2.map(v=>v+"px").join(" "),rws=H2.map(v=>v+"px").join(" "),nw=30+W2.reduce((a,b)=>a+b,0);
   return{h:h2,cols,rws,nw,nOc,nBx,nHit}}
 function mvRender(scroll){const el=$("#mapV");if(!el)return;
   const BX=mvBoxes(),L=mvLotes(),prods=[...new Set([...L.values()].map(l=>l.prod).filter(Boolean))].sort(),q=mvNorm(MV.q);
@@ -626,9 +622,9 @@ function mvRender(scroll){const el=$("#mapV");if(!el)return;
   el.querySelectorAll("[data-zf]").forEach(b=>b.onclick=()=>{const g=b.closest(".mvpat").querySelector(".mvg"),wr=b.closest(".mvpat").querySelector(".mvwrap");if(!g||!wr)return;const nat=+g.dataset.nw||g.scrollWidth;MV.z=Math.max(.1,Math.min(1.6,+((wr.clientWidth-4)/nat).toFixed(2)));mvRender()});
   el.querySelectorAll("[data-mq]").forEach(b=>b.onclick=()=>{const o=onde(b.dataset.mq);if(o.length)mvGoto(o[0].k)});
   el.querySelectorAll("[data-mpk]").forEach(b=>b.onclick=()=>mvGoto(b.dataset.mpk));
-  el.querySelectorAll(".slot[data-k]").forEach(b=>b.onclick=()=>mvBoxInfo(b.dataset.k));
-  if(scroll){const t=el.querySelector(".slot.hit");if(t)setTimeout(()=>t.scrollIntoView({block:"center",inline:"center"}),40)}}
-function mvGoto(k){const bid=k.split("|")[1];MV.col[bid]=false;mvRender();const el=$("#mapV"),t=el&&el.querySelector(`.slot[data-k="${CSS.escape(k)}"]`);if(t){t.classList.add("mvpulse");t.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}}
+  el.querySelectorAll(".mlc[data-k]").forEach(b=>b.onclick=()=>mvBoxInfo(b.dataset.k));
+  if(scroll){const t=el.querySelector(".mlc.hit");if(t)setTimeout(()=>t.scrollIntoView({block:"center",inline:"center"}),40)}}
+function mvGoto(k){const bid=k.split("|")[1];MV.col[bid]=false;mvRender();const el=$("#mapV"),t=el&&el.querySelector(`.mlc[data-k="${CSS.escape(k)}"]`);if(t){t.classList.add("mvpulse");t.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}}
 function mvBoxInfo(k){const B=mvBoxes().get(k),L=mvLotes(),G=PAC.geo.find(g=>g[0]===k.split("|")[1]),c=G&&G[4].find(x=>x[0]===k);
   const ls=(B&&B.ls||[]).map(String),addr=B?B.addr:"";
   const li=ls.map(cd=>{const l=L.get(cd),q=l&&(l.boxes||[]).find(b=>b[0]===k);return`<li><div style="flex:1;min-width:0"><b style="font-size:20px">Lote ${esc(cd)}</b><br><small class="muted">${esc(l&&(l.faz||l.prod)||"")}${l&&l.qtd?` · ${fmt(Math.max(0,l.qtd-(l.exp||0)))} fd de saldo`:""}${q&&q[2]!=null?` · ${fmt(q[2])} emblocado(s) aqui`:""}${l&&l.sit?` · ${esc(l.sit)}`:""}${l&&(l.boxes||[]).length>1?` · também em ${esc(l.boxes.filter(b=>b[0]!==k).map(b=>b[1]).join(", "))}`:""}</small></div></li>`}).join("");
