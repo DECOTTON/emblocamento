@@ -174,7 +174,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.6";
+const VER="1.11.7";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -670,15 +670,28 @@ $("#bMenu").onclick=()=>{const nP=S.sessoes.filter(z=>!z.exp&&(z.lidos.length||z
 
 // ---------- pacote ----------
 $("#fPac").onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
-  try{const j=JSON.parse(await f.text());if(j.tipo!=="rsp-coletor-pacote")throw 0;
+  let j;try{j=JSON.parse(await f.text());if(j.tipo!=="rsp-coletor-pacote")throw 0}catch(err){toast("Arquivo inválido: escolha o pacote-coletor-… gerado no app principal.",4000);return}
+  await usePac(j);pacShare(j)};
+// aplica um pacote (escolhido aqui ou vindo de outro app do coletor)
+async function usePac(j,orig){
     PAC=j;IX=buildIndex(j);await DB.set("pacote",j);
     // remoções já exportadas ou que o pacote novo já mostra (lote fora do box) saem do aparelho
     S.rem=(S.rem||[]).filter(r=>{if(r.exp)return false;const B=IX.boxes.get(r.k);return !!(B&&B.ls&&B.ls.map(String).includes(String(r.lote)))});applyRem();
     // leituras que já entraram no sistema (estão no pacote novo) saem do aparelho
     let rem=0;for(const s of S.sessoes){const n0=s.lidos.length;s.lidos=s.lidos.filter(x=>!prevLidos(x.l||s.lote,s.k).has(`${x.p}-${x.n}`));rem+=n0-s.lidos.length}
     S.sessoes=S.sessoes.filter(s=>s.lidos.length||s.alertas.length&&!s.exp||s.id===S.atual);if(!cur())S.atual=null;await saveState();
-    render();toast(`Pacote carregado: ${fmt(nFard(j))} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
-  catch(err){toast("Arquivo inválido: escolha o pacote-coletor-… gerado no app principal.",4000)}};
+    render();toast(`${orig?`Pacote novo carregado do app ${orig} · `:"Pacote carregado: "}`+` ${fmt(nFard(j))} fardinhos${rem?` · ${rem} leitura(s) já registradas no sistema foram limpas`:""}`,4000)}
+// ---------- pacote compartilhado entre os apps do coletor (Marcação, Emblocamento, Carregamento) ----------
+const PSH={db:null,open(){return this.db?Promise.resolve(this.db):new Promise((ok,ko)=>{const r=indexedDB.open("decotton-coletor",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>{this.db=r.result;ok(this.db)};r.onerror=()=>ko(r.error)})},
+  async get(k){const d=await this.open();return new Promise((ok,ko)=>{const t=d.transaction("kv").objectStore("kv").get(k);t.onsuccess=()=>ok(t.result);t.onerror=()=>ko(t.error)})},
+  async set(k,v){const d=await this.open();return new Promise((ok,ko)=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=()=>ok();t.onerror=()=>ko(t.error)})}};
+async function pacShare(j){try{const cur0=await PSH.get("pacote");if(cur0&&cur0.gerado&&j.gerado&&String(cur0.gerado)>String(j.gerado))return;await PSH.set("pacote",{gerado:j.gerado,app:"Emblocamento",em:new Date().toISOString(),j})}catch(e){}}
+let _pshBusy=false;
+async function pacSync(){if(_pshBusy)return;_pshBusy=true;try{const x=await PSH.get("pacote");
+    if(x&&x.j&&x.j.tipo==="rsp-coletor-pacote"&&(!PAC||String(x.gerado||"")>String(PAC.gerado||""))){await usePac(x.j,x.app||"do coletor")}
+    else if(PAC&&(!x||String(PAC.gerado||"")>String(x.gerado||"")))await pacShare(PAC)}catch(e){}finally{_pshBusy=false}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pacSync()});
+
 
 // ---------- exportar leituras ----------
 // exportar: "Salvar no Google Drive" (compartilhar → Drive) ou salvar no aparelho (Downloads)
@@ -726,7 +739,7 @@ async function openCam(){
 // ---------- início ----------
 (async()=>{
   try{const p=await DB.get("pacote");if(p){PAC=p;IX=buildIndex(p)}const st=await DB.get("estado");if(st)S={sessoes:[],atual:null,disp:"",rem:[],...st};if(!S.rem)S.rem=[];applyRem()}catch(e){toast("Armazenamento do aparelho indisponível.")}
-  devInit();
+  devInit();pacSync();
   if(navigator.storage&&navigator.storage.persist)try{navigator.storage.persist()}catch(e){}
   render();
   if("serviceWorker" in navigator)try{await navigator.serviceWorker.register("sw.js")}catch(e){}
