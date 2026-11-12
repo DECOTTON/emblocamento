@@ -128,7 +128,7 @@ body.mvon{overflow:hidden}
 .mapv .mlc.free{background:transparent;border:1px dashed #9AA6A2;color:#5E6B69}.mapv .mlc.free .mlv{color:#2E9E4F;font-size:16px}
 .mapv .mlc.blk{background:repeating-linear-gradient(135deg,#E6E2D8 0 6px,#D8D3C7 6px 12px);color:#555}.mapv .mlc.blk .mlv{font-size:12px;white-space:normal;text-transform:uppercase}
 .mapv .mlc.matb{background:#E8D3B5}.mapv .mlc.matb b{font-size:13px}
-.mapv .mlc.mix{background:repeating-linear-gradient(135deg,#EFE6D2 0 8px,#E6DBC2 8px 16px);border:1px solid #8D6E63}.mapv .mlc.mix b{font-size:14px}
+.mapv .mlc.mix{background:repeating-linear-gradient(135deg,#EFE6D2 0 8px,#E6DBC2 8px 16px);border:1px solid #8D6E63}.mapv .mlc.mix b{font-size:12.5px;letter-spacing:-.01em}
 .mapv .mlc.dim{opacity:.22}
 .mapv .mlc.hit{outline:3px solid #F9A825;outline-offset:-1px;z-index:2;opacity:1}
 .mapv .mlc.loc{box-shadow:inset 0 0 0 3px var(--acc)}
@@ -165,7 +165,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.4";
+const VER="1.11.5";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -544,7 +544,7 @@ const mnI=(id,ic,t,sub,o)=>{o=o||{};return`<button class="mni${o.dg?" dg":""}" t
 const mnPac=()=>PAC?`Gerado em ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}`:"Nenhum pacote carregado";
 
 // ---------- mapa do pátio (desenho e lotes vêm do pacote; funciona sem internet) — mesmo visual do mapa do app principal ----------
-let MV={q:"",z:null,hl:null,hlT:"",col:{}};
+let MV={q:"",zp:{},hl:null,hlT:"",col:{}};
 const MV_CAT=["#E2CD86","#8FB3D1","#6FB08A","#CE8740","#B08CC4","#E89AA7","#9CC7C0","#D9A26B","#A8B86A","#7FA0B8","#E0B94F","#C58F8F"];
 const MV_SC={"AGUARDANDO LANÇAMENTO":["#5E35B1","#fff"],"⚠️CONTAR":["#F2C230","#1D2E2C"],"COMPLETO":["#2E9E4F","#fff"],"INCOMPLETO":["#C62828","#fff"],"RESTANTE":["#EF7D1A","#fff"]};
 let _mvL=null,_mvLP=null;
@@ -554,7 +554,7 @@ const mvNorm=v=>String(v||"").trim().toUpperCase();
 const mvPt=p=>{const P=(PAC.patios||[]).find(x=>x[0]===p);return P?P[1]:p},mvPtN=p=>{const P=(PAC.patios||[]).find(x=>x[0]===p);return P&&P[2]?P[2]:""};
 function openMapa(opt){if(!PAC){toast("Carregue o pacote primeiro.");return}
   if(!(PAC.geo&&PAC.geo.length)){showSheet(`<h3>🗺 Mapa do pátio</h3><p class="hint" style="margin-top:0">Este pacote não tem o desenho dos pátios. No app principal (com internet), baixe um <b>pacote novo para o coletor</b> e carregue aqui.</p><button class="btn big" type="button" data-x>Fechar</button>`);return}
-  opt=opt||{};MV.hl=opt.hl?new Set(opt.hl.map(String)):null;MV.hlT=opt.hlT||"";if(opt.q!=null)MV.q=opt.q;
+  opt=opt||{};if(opt.hl||opt.q)MV.zp={};MV.hl=opt.hl?new Set(opt.hl.map(String)):null;MV.hlT=opt.hlT||"";if(opt.q!=null)MV.q=opt.q;
   let el=$("#mapV");if(!el){el=document.createElement("div");el.id="mapV";el.className="mapv";document.body.appendChild(el)}
   {const i=$("#scan");if(i)i.blur()}document.body.classList.add("mvon");mvRender(true)}
 function closeMapa(){const el=$("#mapV");if(el)el.remove();document.body.classList.remove("mvon");closeSheet()}
@@ -602,29 +602,29 @@ function mvRender(scroll){const el=$("#mapV");if(!el)return;
   const P=PAC.geo.map(G=>({G,...mvPatio(G,BX,L,prods,q)}));
   // abre só os pátios com lote buscado/destacado; sem busca, todos abertos (como no app principal)
   const temHit=P.some(p=>p.nHit),aberto=p=>MV.col[p.G[0]]!=null?!MV.col[p.G[0]]:(!temHit||p.nHit>0);
-  const z=MV.z||1,legP=[...new Set([...BX.values()].flatMap(B=>(B.ls||[]).map(c=>(L.get(String(c))||{}).prod).filter(Boolean)))].sort().map(p=>`<span><i style="background:${mvCor(p,prods)}"></i>${esc(p)}</span>`).join("");
+  const legP=[...new Set([...BX.values()].flatMap(B=>(B.ls||[]).map(c=>(L.get(String(c))||{}).prod).filter(Boolean)))].sort().map(p=>`<span><i style="background:${mvCor(p,prods)}"></i>${esc(p)}</span>`).join("");
   el.innerHTML=`<header class="mvh"><button type="button" class="hb" id="mvX">← Voltar</button><h1>Pátio de pluma<small>Pacote de ${esc(new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}))} · não é em tempo real</small></h1></header>
     <div class="mvbar"><div class="mvq"><input id="mvQ" type="text" inputmode="numeric" enterkeyhint="search" placeholder="🔍 Buscar lote" value="${esc(MV.q)}" autocomplete="off"><button type="button" id="mvQx" class="${MV.q?"":"hide"}" aria-label="Limpar">✕</button></div></div>
     ${MV.hl?`<div class="mvhl"><b>${esc(MV.hlT||"Lotes")}:</b> ${hlList.map(c=>{const o=onde(c);return`<button type="button" data-mq="${esc(c)}" class="${o.length?"":"nf"}">${esc(c)}<small>${o.length?esc(o.map(B=>B.addr).join(", ")):"sem box"}</small></button>`}).join("")}<button type="button" id="mvHlx" class="x">✕</button></div>`:""}
     ${q?`<div class="mvhl"><b>Lote ${esc(MV.q)}:</b> ${qBx.length?qBx.map(B=>`<button type="button" data-mpk="${esc(B.k)}">${esc(B.addr)}</button>`).join(""):`<span class="nf">não está em nenhum box deste pacote</span>`}</div>`:""}
     <div class="mvleg">${legP}<span><i class="lf"></i>Livre</span><span><i class="lm"></i>Ocupado por material</span><span><i class="lb"></i>Bloqueado</span></div>
-    <div class="mvbody" id="mvB">${P.map(p=>{const bid=p.G[0],op=aberto(p);return`<section class="mvpat${op?"":" fech"}" data-pat="${esc(bid)}">
+    <div class="mvbody" id="mvB">${P.map(p=>{const bid=p.G[0],op=aberto(p),z=MV.zp[bid]||1;return`<section class="mvpat${op?"":" fech"}" data-pat="${esc(bid)}">
       <div class="mvph"><button type="button" class="mvcar" data-tg="${esc(bid)}" aria-label="${op?"Recolher":"Mostrar"}">${op?"▾":"▸"}</button><b>${esc(mvPt(bid))}${mvPtN(bid)?" · "+esc(mvPtN(bid)):""}</b></div>
-      ${op?`<div class="mvz"><button type="button" data-zm="-1">−</button><span>${Math.round(z*100)}%</span><button type="button" data-zm="1">+</button><button type="button" data-zf="${esc(bid)}">Ajustar</button></div>
+      ${op?`<div class="mvz"><button type="button" data-zm="-1" data-zb="${esc(bid)}">−</button><span>${Math.round(z*100)}%</span><button type="button" data-zm="1" data-zb="${esc(bid)}">+</button><button type="button" data-zf="${esc(bid)}">Ajustar</button></div>
       <p class="mvst">${fmt(p.nOc)} de ${fmt(p.nBx)} boxes ocupados · <b>${fmt(p.nBx-p.nOc)} vagas disponíveis</b></p>
       <div class="mvwrap"><div class="mvg" data-nw="${p.nw}" style="grid-template-columns:${p.cols};grid-template-rows:${p.rws};zoom:${z}">${p.h}</div></div>`:""}</section>`}).join("")}</div>`;
   el.querySelector("#mvX").onclick=closeMapa;
-  const qi=el.querySelector("#mvQ");qi.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();MV.q=qi.value.trim();MV.hl=null;MV.col={};mvRender(true)}};qi.onchange=()=>{MV.q=qi.value.trim();MV.col={};mvRender(true)};
+  const qi=el.querySelector("#mvQ");qi.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();MV.q=qi.value.trim();MV.hl=null;MV.col={};MV.zp={};mvRender(true)}};qi.onchange=()=>{if(qi.value.trim()===MV.q)return;MV.q=qi.value.trim();MV.col={};MV.zp={};mvRender(true)};
   el.querySelector("#mvQx").onclick=()=>{MV.q="";MV.col={};mvRender()};
   const hx=el.querySelector("#mvHlx");if(hx)hx.onclick=()=>{MV.hl=null;MV.col={};mvRender()};
   el.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{const id=b.dataset.tg,sec=b.closest(".mvpat");MV.col[id]=!sec.classList.contains("fech");mvRender()});
-  el.querySelectorAll("[data-zm]").forEach(b=>b.onclick=()=>{MV.z=Math.min(1.6,Math.max(.1,+((MV.z||1)+(+b.dataset.zm)*.1).toFixed(2)));mvRender()});
-  el.querySelectorAll("[data-zf]").forEach(b=>b.onclick=()=>{const g=b.closest(".mvpat").querySelector(".mvg"),wr=b.closest(".mvpat").querySelector(".mvwrap");if(!g||!wr)return;const nat=+g.dataset.nw||g.scrollWidth;MV.z=Math.max(.1,Math.min(1.6,+((wr.clientWidth-4)/nat).toFixed(2)));mvRender()});
+  el.querySelectorAll("[data-zm]").forEach(b=>b.onclick=()=>{const id=b.dataset.zb;MV.zp[id]=Math.min(1.6,Math.max(.1,+((MV.zp[id]||1)+(+b.dataset.zm)*.1).toFixed(2)));mvRender()});
+  el.querySelectorAll("[data-zf]").forEach(b=>b.onclick=()=>{const g=b.closest(".mvpat").querySelector(".mvg"),wr=b.closest(".mvpat").querySelector(".mvwrap");if(!g||!wr)return;const nat=+g.dataset.nw||g.scrollWidth;MV.zp[b.dataset.zf]=Math.max(.1,Math.min(1.6,+((wr.clientWidth-4)/nat).toFixed(2)));mvRender()});
   el.querySelectorAll("[data-mq]").forEach(b=>b.onclick=()=>{const o=onde(b.dataset.mq);if(o.length)mvGoto(o[0].k)});
   el.querySelectorAll("[data-mpk]").forEach(b=>b.onclick=()=>mvGoto(b.dataset.mpk));
   el.querySelectorAll(".mlc[data-k]").forEach(b=>b.onclick=()=>mvBoxInfo(b.dataset.k));
   if(scroll){const t=el.querySelector(".mlc.hit");if(t)setTimeout(()=>t.scrollIntoView({block:"center",inline:"center"}),40)}}
-function mvGoto(k){const bid=k.split("|")[1];MV.col[bid]=false;mvRender();const el=$("#mapV"),t=el&&el.querySelector(`.mlc[data-k="${CSS.escape(k)}"]`);if(t){t.classList.add("mvpulse");t.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}}
+function mvGoto(k){const bid=k.split("|")[1];MV.col[bid]=false;if((MV.zp[bid]||1)<.6)MV.zp[bid]=1;mvRender();const el=$("#mapV"),t=el&&el.querySelector(`.mlc[data-k="${CSS.escape(k)}"]`);if(t){t.classList.add("mvpulse");t.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}}
 function mvBoxInfo(k){const B=mvBoxes().get(k),L=mvLotes(),G=PAC.geo.find(g=>g[0]===k.split("|")[1]),c=G&&G[4].find(x=>x[0]===k);
   const ls=(B&&B.ls||[]).map(String),addr=B?B.addr:"";
   const li=ls.map(cd=>{const l=L.get(cd),q=l&&(l.boxes||[]).find(b=>b[0]===k);return`<li><div style="flex:1;min-width:0"><b style="font-size:20px">Lote ${esc(cd)}</b><br><small class="muted">${esc(l&&(l.faz||l.prod)||"")}${l&&l.qtd?` · ${fmt(Math.max(0,l.qtd-(l.exp||0)))} fd de saldo`:""}${q&&q[2]!=null?` · ${fmt(q[2])} emblocado(s) aqui`:""}${l&&l.sit?` · ${esc(l.sit)}`:""}${l&&(l.boxes||[]).length>1?` · também em ${esc(l.boxes.filter(b=>b[0]!==k).map(b=>b[1]).join(", "))}`:""}</small></div></li>`}).join("");
