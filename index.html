@@ -62,7 +62,8 @@ main{padding:12px;max-width:640px;margin:0 auto;padding-bottom:40px}
 .cam .cmsg{position:absolute;left:0;right:0;top:12px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px #000}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1D2E2C;color:#fff;padding:10px 16px;border-radius:10px;z-index:60;font-weight:600;max-width:90vw;text-align:center}
 .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 6px}.tag.ok{background:#DDF3E3;color:#14552A}.tag.warn{background:var(--warnbg);color:#6B4100}
-.sbar{flex:1 1 100%;display:flex;gap:6px;margin-top:4px}.sbar .scan{flex:1;min-width:0;padding:10px 12px;font-size:19px;border:2px solid #F2C230}
+/* campo da leitura invisível: recebe o leitor do coletor, mas não aparece nem pode ser tocado */
+.sbar{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}.sbar .scan{width:1px;height:1px;padding:0;border:0;font-size:16px;caret-color:transparent;color:transparent;background:transparent}
 .sb{border:0;border-radius:10px;padding:0 12px;font-weight:800;font-size:16px;background:#fff;color:var(--ink)}.sb.pri{background:#F2C230}
 .pkg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pkg span{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:3px}
 .pkg select{width:100%;font-size:17px;padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
@@ -164,7 +165,7 @@ body.mvon{overflow:hidden}
 </head>
 <body>
 <header><h1><img src="logo.png" alt="" class="hlogo">Emblocamento<small id="hSub">Sem pacote carregado</small></h1><button class="hb" id="bMenu" type="button">☰ Menu</button>
-<div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" placeholder="Etiqueta SAI ou Nº do fardinho"><button class="sb" id="bGo" type="button">OK</button><button class="sb pri" id="bCam" type="button" title="Câmera">📷</button></div></header>
+<div id="sbar" class="sbar hide"><input class="scan" id="scan" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" enterkeyhint="go" tabindex="-1" aria-label="Leitura do coletor"></div></header>
 <main id="app"></main>
 <input type="file" id="fPac" accept=".txt,.json,text/plain,application/json" hidden>
 <script>
@@ -174,7 +175,11 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.11.7";
+const VER="1.12.0";
+// leitura sem teclado na tela (padrão): o campo oculto recebe o foco como "somente leitura" (o Android não abre o teclado),
+// logo depois volta a aceitar o texto do leitor e o app pede ao Chrome para esconder o teclado. Desliga no Menu.
+const KB_LS="emb_leitura";const semTeclado=()=>{try{return localStorage.getItem(KB_LS)!=="campo"}catch(e){return true}};
+const kbHide=()=>{try{if(semTeclado()&&navigator.virtualKeyboard)navigator.virtualKeyboard.hide()}catch(e){}};
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>n==null?"—":Number(n).toLocaleString("pt-BR");
@@ -270,7 +275,7 @@ function lotBoxes(c){const L=IX.lotes.get(c);return L?L.boxes:[]}
 
 // ---------- telas ----------
 function render(){applyLocal();
-  $("#sbar").classList.toggle("hide",!PAC);if(PAC)$("#scan").placeholder="Etiqueta SAI ou Nº do fardinho";
+  $("#sbar").classList.toggle("hide",!PAC);
   $("#hSub").textContent=PAC?`Pacote de ${new Date(PAC.gerado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · ${S.disp||"aparelho"}`:"Sem pacote carregado";
   const a=$("#app");
   if(!PAC){a.innerHTML=`<div class="card"><h2>Comece por aqui</h2><p>Este app conta os fardinhos emblocados pela leitura da etiqueta e funciona <b>sem internet</b>.</p>
@@ -288,7 +293,7 @@ function render(){applyLocal();
      <p class="hint" id="raw">${ui.lastRaw?`Última leitura recebida: ${esc(ui.lastRaw.v)}`:""}</p>
      ${L&&L.boxes.length>1?`<p class="hint">Lote também em: ${L.boxes.filter(b=>b[0]!==s.k).map(b=>esc(b[1])).join(", ")}</p>`:""}
    </div>
-   <div class="card"><h2>Últimas leituras (${fmt(s.lidos.length)} nesta sessão${s.alertas.length?` · <span style="color:var(--bad)">${s.alertas.length} de outro lote</span>`:""})</h2>
+   <div class="card"><h2>Últimas leituras (${fmt(s.lidos.length)} nesta sessão${s.alertas.length?` · <span style="color:var(--bad)">${s.alertas.length} de outro lote</span>`:""}${(s.dig||[]).length?` · <span style="color:var(--bad)">${s.dig.length} digitação(ões) recusada(s)</span>`:""})</h2>
      <ul class="lst">${s.lidos.slice(-8).reverse().map(x=>`<li><span class="tag ok">✓</span><b>P${x.p} ${g3(x.n)}</b><span class="r muted">${new Date(x.t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></li>`).join("")||`<li class="muted">Nenhuma leitura ainda.</li>`}</ul>
      <div class="row" style="margin-top:10px"><button class="btn" type="button" id="bUndo"${s.lidos.length?"":" disabled"}>↶ Desfazer última</button><button class="btn pri" type="button" id="bFim">Finalizar box</button></div></div>`;
   wire();focusScan()}
@@ -384,22 +389,33 @@ function sessListHTML(){const L=S.sessoes.slice().sort((a,b)=>String(b.fim||b.in
   const rmH=RM.length?`<h2 style="margin-top:14px">Lotes removidos de box</h2><ul class="lst">${RM.map(r=>`<li><div><b>${esc(r.addr)}</b> · lote <span class="pill">${esc(r.lote)}</span><br><small class="muted">${r.motivo==="movido"?`movido${r.destAddr?` para ${esc(r.destAddr)}`:""}`:"expedido"} · ${new Date(r.t).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${r.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span><br><button class="btn" type="button" data-rdel="${r.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">↶ Desfazer</button>`}</span></li>`).join("")}</ul>`:"";
   return `<div class="card"><h2>Leituras no aparelho</h2>${L.length?`<ul class="lst">${L.map(s=>`<li data-s="${s.id}"><div><b>${esc(s.addr)}</b> · ${s.div?`<span class="dvb">DIVERSO</span> ${fmt(new Set(s.lidos.map(x=>x.l)).size)} lote(s)`:`lote <span class="pill">${esc(s.lote||"?")}</span>`}<br><small class="muted">${fmt(s.lidos.length)} leitura(s)${s.alertas.length?` · ${s.alertas.length} alerta(s)`:""} · ${new Date(s.fim||s.inicio).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</small></div><span class="r">${s.exp?`<span class="tag ok">exportada</span>`:`<span class="tag warn">pendente</span>`}<br><button class="btn" type="button" data-cont="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px">Continuar</button>${s.exp?"":` <button class="btn" type="button" data-del="${s.id}" style="padding:6px 10px;font-size:14px;margin-top:4px;color:var(--bad)" title="Remover estas leituras">🗑</button>`}</span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Nenhuma leitura registrada.</p>`}
     ${rmH}${L.length||RM.length?`<button class="btn ${pend?"pri":""} big" type="button" id="bExp" style="margin-top:10px">⤓ Exportar leituras${pend?` (${pend} pendente${pend>1?"s":""})`:""}</button>`:""}</div>`}
-function focusScan(){const i=$("#scan");if(ui.kbOff)return;if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&!$(".mapv")&&document.activeElement!==i){try{i.focus({preventScroll:true})}catch(e){i.focus()}}}
+function focusScan(){const i=$("#scan");if(ui.kbOff)return;if(i&&PAC&&!ui.lock&&!$(".ovl")&&!$(".cam")&&!$(".mapv")&&document.activeElement!==i){const sk=semTeclado();i.setAttribute("virtualkeyboardpolicy",sk?"manual":"auto");if(sk)i.readOnly=true;try{i.focus({preventScroll:true})}catch(e){i.focus()}if(sk){kbHide();setTimeout(()=>{i.readOnly=false;kbMove(i);kbHide();setTimeout(kbHide,150)},120)}}}
 function wire(){
   const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on("#bPac",()=>$("#fPac").click());
   on("#bExp",exportar);
   on("#bUndo",()=>{const s=cur();if(!s||!s.lidos.length)return;const x=s.lidos.pop();saveState();ui.flash={c:"dup",t:`Desfeito: P${x.p} ${g3(x.n)}`};render()});
-  on("#bFim",()=>{const s=cur();if(s){s.fim=nowISO();if(!s.lidos.length&&!s.alertas.length&&!s.desc.length)S.sessoes=S.sessoes.filter(z=>z!==s)}S.atual=null;ui.flash=null;saveState();render()});
+  on("#bFim",()=>{const s=cur();if(s){s.fim=nowISO();if(!s.lidos.length&&!s.alertas.length&&!s.desc.length&&!(s.dig||[]).length)S.sessoes=S.sessoes.filter(z=>z!==s)}S.atual=null;ui.flash=null;saveState();render()});
   document.querySelectorAll("[data-cont]").forEach(b=>b.onclick=()=>{S.atual=b.dataset.cont;ui.flash=null;saveState();render()});
 }
 // campo de leitura fixo (nunca é recriado: o teclado do coletor continua aberto entre as leituras)
-(()=>{const i=$("#scan");let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim();i.value="";_pv="";if(v)onRead(v)};
-  $("#bGo").onclick=go;$("#bCam").onclick=openCam;
+// segurança: só conta o que veio do gatilho do coletor. O leitor manda a etiqueta inteira em poucos milissegundos
+// (ou de uma vez); uma pessoa digitando é muito mais lenta. Colar também é recusado.
+const KS_MED=50,KS_MAX=200;let _ks=null,_scanGo=null;
+const ksReset=()=>{_ks={n:0,t0:0,last:0,max:0,bulk:false,cola:false,len:0}};ksReset();
+const ksFonte=()=>{const k=_ks;if(k.cola)return"dig";if(k.bulk)return"scan";if(k.n<12)return"dig";const med=(k.last-k.t0)/Math.max(1,k.n-1);return(med<=KS_MED&&k.max<=KS_MAX)?"scan":"dig"};
+(()=>{const i=$("#scan");let tm=null;const go=()=>{clearTimeout(tm);const v=i.value.trim(),f=ksFonte();i.value="";_pv="";ksReset();if(v)onRead(v,f)};
+  _scanGo=go;
   i.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();go()}});
-  i.addEventListener("focus",()=>{ui.kbOff=false});
+  i.addEventListener("focus",()=>{ui.kbOff=false;kbHide()});
+  if(navigator.virtualKeyboard)try{navigator.virtualKeyboard.addEventListener("geometrychange",()=>{if(document.activeElement===i&&navigator.virtualKeyboard.boundingRect.height>0)kbHide()})}catch(e){}
+  i.addEventListener("paste",()=>{_ks.cola=true});i.addEventListener("drop",()=>{_ks.cola=true});
   // leitor do coletor sem "Enter" no fim: quando chega um código completo, processa sozinho
-  i.addEventListener("input",()=>{clearTimeout(tm);const v=i.value;if(v)noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
+  i.addEventListener("input",e=>{clearTimeout(tm);const v=i.value,now=Date.now(),add=v.length-_ks.len;_ks.len=v.length;
+    if(!v){ksReset();return}
+    if(e.inputType==="insertFromPaste"||e.inputType==="insertFromDrop")_ks.cola=true;
+    if(add>=4)_ks.bulk=true;else if(add>0){if(_ks.n===0)_ks.t0=now;else _ks.max=Math.max(_ks.max,now-_ks.last);_ks.last=now;_ks.n+=add}
+    noteRaw(v);if(/\/00\/\d{18}/.test(v)||/\d{20}/.test(v.replace(/\D/g,"")))tm=setTimeout(go,180)});
   i.addEventListener("blur",()=>setTimeout(()=>{const a=document.activeElement;if(!a||a===document.body)focusScan()},300))})();
 // tocar num botão não tira o foco do campo de leitura (o teclado não fecha)
 document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,.btn");if(b&&document.activeElement===$("#scan")&&!b.closest(".pkfind"))e.preventDefault()},true);
@@ -407,22 +423,29 @@ document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.c
 // Então o campo é vigiado: código completo parado por um instante → processa.
 let _pv="",_pt=0;
 setInterval(()=>{const i=$("#scan");if(!i||ui.lock)return;const v=i.value;if(v!==_pv){_pv=v;_pt=Date.now();if(v)noteRaw(v);return}
-  if(v&&Date.now()-_pt>350&&(/\/00\/\d{18}/.test(v)||v.replace(/\D/g,"").length>=12)){i.value="";_pv="";onRead(v.trim())}},150);
+  if(v&&Date.now()-_pt>350&&(/\/00\/\d{18}/.test(v)||v.replace(/\D/g,"").length>=12)&&_scanGo)_scanGo()},150);
 // modo "Keyboard input" com o foco fora do campo: junta as teclas digitadas rapidamente
-let _kb="",_kt=0,_kto=null;
-document.addEventListener("keydown",e=>{const t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"))return;if(ui.lock)return;
-  if(e.key==="Enter"){if(_kb.length>=6){const v=_kb;_kb="";noteRaw(v);onRead(v)}_kb="";return}
-  if(e.key&&e.key.length===1){const n=Date.now();if(n-_kt>300)_kb="";_kb+=e.key;_kt=n;clearTimeout(_kto);
-    _kto=setTimeout(()=>{if(_kb.length>=12){const v=_kb;_kb="";noteRaw(v);onRead(v)}else _kb=""},350)}},true);
+let _kb="",_kt=0,_kto=null,_k0=0,_kmax=0;
+// leitura que começou enquanto o campo estava "somente leitura": passa o que já chegou para o campo, mantendo a medição
+function kbMove(i){if(!_kb)return;clearTimeout(_kto);i.value=_kb;_ks={n:_kb.length,t0:_k0,last:_kt,max:_kmax,bulk:false,cola:false,len:_kb.length};_pv=i.value;_pt=Date.now();_kb=""}
+const kbFonte=()=>{const n=_kb.length;if(n<12)return"dig";const med=(_kt-_k0)/Math.max(1,n-1);return(med<=KS_MED&&_kmax<=KS_MAX)?"scan":"dig"};
+document.addEventListener("keydown",e=>{const t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA")&&!(t.id==="scan"&&t.readOnly))return;if(ui.lock)return;
+  if(e.key==="Enter"){if(_kb.length>=6){const v=_kb,f=kbFonte();_kb="";noteRaw(v);onRead(v,f)}_kb="";return}
+  if(e.key&&e.key.length===1){const n=Date.now();if(n-_kt>300){_kb="";_k0=n;_kmax=0}else if(_kb)_kmax=Math.max(_kmax,n-_kt);_kb+=e.key;_kt=n;clearTimeout(_kto);
+    _kto=setTimeout(()=>{if(_kb.length>=12){const v=_kb,f=kbFonte();_kb="";noteRaw(v);onRead(v,f)}else _kb=""},350)}},true);
 function noteRaw(v){ui.lastRaw={v:String(v).slice(0,80),t:Date.now()};const e=$("#raw");if(e)e.textContent=`Última leitura recebida: ${ui.lastRaw.v}`}
 
 // ---------- uma leitura ----------
-function onRead(raw){
+function onRead(raw,src){
   if(ui.lock){sBad();return}
   const s=cur(),v=String(raw).trim();
-  // sem sessão: pode ser um endereço de box digitado
+  // sem sessão: pode ser um endereço de box
   if(!s){const k=IX.byAddr.get(normAddr(v));if(k&&!/^\d+$/.test(v)){startBoxPick(k,null);return}}
   const P=scanParse(v);
+  // só conta a etiqueta inteira (código de barras SAI ou QR Abrapa) lida pelo gatilho do coletor
+  if(src!=="scan"||(P&&!P.bad&&!P.sai)){
+    if(s){(s.dig=s.dig||[]).push({p:P&&!P.bad?(P.prensa||0):0,n:P&&!P.bad?P.num:0,raw:v.slice(0,40),t:nowISO()});s.fim=nowISO();s.exp=false;saveState()}sBad();
+    lockScreen("bad",`<h3>⚠ DIGITAÇÃO NÃO PERMITIDA</h3><p>O fardinho só conta quando a <b>etiqueta é lida</b> com o <b>gatilho do coletor</b>.</p><p><b>Não foi contado.</b>${s?" A tentativa ficou registrada no box.":""}</p>`,[["Entendi — continuar",unlock]]);return}
   if(!P||P.bad){ui.flash={c:"dup",t:"Código não reconhecido"};sDup();render();return}
   const F=findFard(P,s&&s.lote);
   if(!F){// fora do pacote
@@ -657,7 +680,7 @@ $("#bMenu").onclick=()=>{const nP=S.sessoes.filter(z=>!z.exp&&(z.lidos.length||z
   ${mnG("Pátio")}${mnI("mMap","🗺","Mapa do pátio",PAC?"Boxes e lotes do pacote, com as leituras deste coletor":"Carregue um pacote para ver o mapa")}
   ${mnG("Leituras")}${mnI("mLei","📋","Leituras no aparelho","Sessões de emblocamento e remoções",{bd:nP?`${nP} pendente${nP>1?"s":""}`:""})}${mnI("mExp","⤓","Exportar leituras","Arquivo para importar no app principal")}
   ${mnG("Pacote")}${mnI("mPac","📂","Carregar pacote novo",PAC?`${mnPac()} · ${fmt(nFard(PAC))} fardinhos · ${fmt(PAC.lotes.length)} lotes`:mnPac())}
-  ${mnG("Aparelho")}${mnI("mDisp","✎","Nome deste aparelho",esc(S.disp||"não definido")+(DEV_RE.test(S.disp||"")?"":" · toque para padronizar"))}${mnI("mLimpa","🗑","Apagar leituras já exportadas",nE?`${nE} sessão(ões) exportada(s)`:"Nenhuma leitura exportada",{dg:1})}
+  ${mnG("Aparelho")}${mnI("mDisp","✎","Nome deste aparelho",esc(S.disp||"não definido")+(DEV_RE.test(S.disp||"")?"":" · toque para padronizar"))}${mnI("mKb","⌨",semTeclado()?"Leitura sem teclado: ligada":"Leitura sem teclado: desligada",semTeclado()?"O teclado não aparece. Se o gatilho parar de ler, toque para desligar.":"O teclado aparece na tela. Toque para ligar e esconder o teclado.")}${mnI("mLimpa","🗑","Apagar leituras já exportadas",nE?`${nE} sessão(ões) exportada(s)`:"Nenhuma leitura exportada",{dg:1})}
   </div><p class="mnv">Emblocamento · versão ${VER}</p>
   <button class="btn big" type="button" data-x>Fechar</button>`,o=>{
   $("#mMap").onclick=()=>{closeSheet();openMapa()};
@@ -665,6 +688,7 @@ $("#bMenu").onclick=()=>{const nP=S.sessoes.filter(z=>!z.exp&&(z.lidos.length||z
   $("#mLei").onclick=()=>{closeSheet();openLeituras()};
   $("#mExp").onclick=()=>{closeSheet();exportar()};
   $("#mDisp").onclick=()=>openDev();
+  $("#mKb").onclick=()=>{const on=!semTeclado();try{localStorage.setItem(KB_LS,on?"tecla":"campo")}catch(e){}closeSheet();toast(on?"Leitura sem teclado ligada":"Leitura com teclado (campo) ligada");const i=$("#scan");if(i)i.blur();render();focusScan()};
   $("#mLimpa").onclick=()=>{const n=S.sessoes.filter(s=>s.exp).length;if(!n){toast("Nenhuma leitura exportada para apagar.");return}
     if(confirm(`Apagar ${n} sessão(ões) já exportada(s) deste aparelho? Faça isso só depois de importar o arquivo no app principal.`)){S.sessoes=S.sessoes.filter(s=>!s.exp);if(!cur())S.atual=null;saveState();rebuildIX();closeSheet();render()}}})};
 
@@ -695,12 +719,12 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 
 // ---------- exportar leituras ----------
 // exportar: "Salvar no Google Drive" (compartilhar → Drive) ou salvar no aparelho (Downloads)
-function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.length||s.desc.length),rr=S.rem||[];if(!ss.length&&!rr.length){toast("Nenhuma leitura para exportar.");return}
-  const j={tipo:"rsp-coletor-leituras",v:1,disp:S.disp||"",app:VER,exportado:nowISO(),pacote:PAC?PAC.gerado:null,sessoes:ss.flatMap(s=>{if(!s.div)return[{k:s.k,addr:s.addr,lote:s.lote,inicio:s.inicio,fim:s.fim,lidos:s.lidos,alertas:s.alertas,desc:s.desc}];
+function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.length||s.desc.length||(s.dig||[]).length),rr=S.rem||[];if(!ss.length&&!rr.length){toast("Nenhuma leitura para exportar.");return}
+  const j={tipo:"rsp-coletor-leituras",v:1,disp:S.disp||"",app:VER,exportado:nowISO(),pacote:PAC?PAC.gerado:null,sessoes:ss.flatMap(s=>{if(!s.div)return[{k:s.k,addr:s.addr,lote:s.lote,inicio:s.inicio,fim:s.fim,lidos:s.lidos,alertas:s.alertas,desc:s.desc,dig:s.dig||[]}];
     // box de diversos: uma sessão por lote (o app principal grava a qtd. de cada lote neste box)
     const G=new Map();for(const x of s.lidos){const c=x.l||"";if(!G.has(c))G.set(c,[]);G.get(c).push({p:x.p,n:x.n,t:x.t})}
-    const out=[...G.entries()].map(([c,l],i)=>({k:s.k,addr:s.addr,lote:c,div:true,inicio:s.inicio,fim:s.fim,lidos:l,alertas:i?[]:s.alertas,desc:i?[]:s.desc}));
-    return out.length?out:[{k:s.k,addr:s.addr,lote:"",div:true,inicio:s.inicio,fim:s.fim,lidos:[],alertas:s.alertas,desc:s.desc}]}),
+    const out=[...G.entries()].map(([c,l],i)=>({k:s.k,addr:s.addr,lote:c,div:true,inicio:s.inicio,fim:s.fim,lidos:l,alertas:i?[]:s.alertas,desc:i?[]:s.desc,dig:i?[]:(s.dig||[])}));
+    return out.length?out:[{k:s.k,addr:s.addr,lote:"",div:true,inicio:s.inicio,fim:s.fim,lidos:[],alertas:s.alertas,desc:s.desc,dig:s.dig||[]}]}),
     remocoes:rr.map(r=>({k:r.k,addr:r.addr,lote:r.lote,motivo:r.motivo,dest:r.dest||"",destAddr:r.destAddr||"",t:r.t}))};
   // mesmo padrão de nome dos arquivos do app principal: "Base - Empresa - DD-MM-AAAA - HHhMMmSSs.txt"
   const d=new Date(),p=n=>String(n).padStart(2,"0"),cl=t=>String(t||"").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim();
@@ -714,27 +738,6 @@ function exportar(){const ss=S.sessoes.filter(s=>s.lidos.length||s.alertas.lengt
     <button class="btn big" type="button" id="exDev" style="margin-bottom:8px">⤓ Salvar no aparelho (Downloads)</button><button class="btn big" type="button" data-x>Cancelar</button>`,o=>{
     const dr=$("#exDrive");if(dr)dr.onclick=async()=>{try{await navigator.share({files:[file],title:name});await done("enviado pelo Compartilhar (Google Drive)")}catch(e){if(!(e&&e.name==="AbortError"))toast("Não foi possível compartilhar. Use Salvar no aparelho.")}};
     $("#exDev").onclick=async()=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);await done("salvo no aparelho (pasta Downloads)")}})}
-
-// ---------- câmera (celular) ----------
-const ZXW="https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/iife/reader/index.js",ZXW_WASM="https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/reader/zxing_reader.wasm";
-let zxwP=null;function loadZXW(){if(window.ZXingWASM)return Promise.resolve();if(zxwP)return zxwP;zxwP=new Promise((ok,ko)=>{const s=document.createElement("script");s.src=ZXW;s.onload=()=>{try{const Z=window.ZXingWASM,ov={locateFile:(p,pre)=>/\.wasm$/.test(p)?ZXW_WASM:pre+p};if(Z.prepareZXingModule)Z.prepareZXingModule({overrides:ov});else if(Z.setZXingModuleOverrides)Z.setZXingModuleOverrides(ov)}catch(e){}ok()};s.onerror=()=>{zxwP=null;ko()};document.head.appendChild(s)});return zxwP}
-async function openCam(){
-  const c=document.createElement("div");c.className="cam";c.innerHTML=`<video playsinline muted autoplay></video><div class="tgt"></div><div class="cmsg" id="cMsg">Abrindo a câmera…</div><div class="cbar"><button class="btn big" type="button" id="cClose">Fechar câmera</button></div>`;document.body.appendChild(c);
-  const v=c.querySelector("video"),msg=t=>{const m=$("#cMsg");if(m)m.textContent=t};let stream=null,run=true,last="",lastT=0;
-  const close=()=>{run=false;try{stream&&stream.getTracks().forEach(t=>t.stop())}catch(e){}c.remove();focusScan()};$("#cClose").onclick=close;
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});v.srcObject=stream;await v.play()}
-  catch(e){msg("Não foi possível abrir a câmera. Permita o acesso à câmera para este app nos ajustes.");return}
-  let bd=null;try{if("BarcodeDetector" in window)bd=new BarcodeDetector({formats:["qr_code","code_128","itf","data_matrix"]})}catch(e){bd=null}
-  if(!bd){try{await loadZXW()}catch(e){msg("Leitor não carregado: abra o app uma vez com internet para ele ficar disponível offline.");return}}
-  msg("Aponte para o QR code ou o código de barras");
-  const cv=document.createElement("canvas"),ctx=cv.getContext("2d",{willReadFrequently:true});
-  const tick=async()=>{if(!run)return;
-    if(v.readyState>=2&&!ui.lock&&!$(".ovl")){try{let txt=null;const W=v.videoWidth,H=v.videoHeight;
-      if(bd){const r=await bd.detect(v);const h=(r||[]).find(x=>scanParse(x.rawValue))||(r||[])[0];txt=h&&h.rawValue}
-      else{const sw=Math.round(W*.84),sh=Math.round(H*.5),sx=Math.round((W-sw)/2),sy=Math.round(H*.25),k=Math.min(1,1280/sw);cv.width=Math.round(sw*k);cv.height=Math.round(sh*k);ctx.drawImage(v,sx,sy,sw,sh,0,0,cv.width,cv.height);
-        const rs=await window.ZXingWASM.readBarcodes(ctx.getImageData(0,0,cv.width,cv.height),{tryHarder:true,formats:["QRCode","Code128","ITF","DataMatrix"],maxNumberOfSymbols:1});const h=(rs||[]).find(x=>x.text);txt=h&&h.text}
-      const t=Date.now();if(txt&&!(txt===last&&t-lastT<2500)){last=txt;lastT=t;onRead(txt)}}catch(e){}}
-    setTimeout(tick,bd?120:200)};tick()}
 
 // ---------- início ----------
 (async()=>{
