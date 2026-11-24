@@ -175,7 +175,7 @@ body.mvon{overflow:hidden}
 // Carrega o "pacote" gerado no app principal, confere cada fardinho lido
 // contra o lote do box, conta e devolve as leituras em arquivo.
 // ======================================================================
-const VER="1.12.1";
+const VER="1.12.2";
 // leitura sem teclado na tela (padrão): o campo oculto recebe o foco como "somente leitura" (o Android não abre o teclado),
 // logo depois volta a aceitar o texto do leitor e o app pede ao Chrome para esconder o teclado. Desliga no Menu.
 const KB_LS="emb_leitura";const semTeclado=()=>{try{return localStorage.getItem(KB_LS)!=="campo"}catch(e){return true}};
