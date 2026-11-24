@@ -1,6 +1,6 @@
 // Service worker: deixa o app e o leitor de códigos disponíveis sem internet
-const CACHE="emblocamento-v42";
-const SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-180.png","./logo.png"];
+const CACHE="emblocamento-v43";
+const SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-180.png","./logo.png","./icon-maskable-192.png","./icon-maskable-512.png"];
 const EXT=[];
 self.addEventListener("install",e=>{e.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll(SHELL);
   for(const u of EXT){try{const r=await fetch(u,{mode:"cors"});if(r.ok)await c.put(u,r)}catch(err){}}self.skipWaiting()})())});
