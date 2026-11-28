@@ -129,7 +129,7 @@ body.mvon{overflow:hidden}
 .mapv .mlc .mlp{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%}.mapv .mlp.pk{background:#C62828}.mapv .mlp.fc{background:#2E9E4F}
 .mapv .mlc.free{background:transparent;border:1px dashed #9AA6A2;color:#5E6B69}.mapv .mlc.free .mlv{color:#2E9E4F;font-size:16px}
 .mapv .mlc.blk{background:repeating-linear-gradient(135deg,#E6E2D8 0 6px,#D8D3C7 6px 12px);color:#555}.mapv .mlc.blk .mlv{font-size:12px;white-space:normal;text-transform:uppercase}
-.mapv .mlc.matb{background:#E8D3B5}.mapv .mlc.matb b{font-size:13px}
+.mapv .mlc.matb{background:#E8D3B5}.mlc.matc{background:repeating-linear-gradient(135deg,var(--mb,#B9824A) 0 8px,var(--mb2,#A8743F) 8px 16px)!important;border:2px solid var(--md,#6D4520)!important;color:#fff!important}.mlc.matc>*,.mlc.matc small,.mlc.matc .mlx,.mlc.matc b,.mlc.matc i{color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.35)}.mapv .mlc.matb b{font-size:13px}
 .mapv .mlc.mix{background:repeating-linear-gradient(135deg,#EFE6D2 0 8px,#E6DBC2 8px 16px);border:1px solid #8D6E63}.mapv .mlc.mix b{font-size:12.5px;letter-spacing:-.01em}
 .mapv .mlc.dim{opacity:.22}
 .mapv .mlc.hit{outline:3px solid #F9A825;outline-offset:-1px;z-index:2;opacity:1}
@@ -591,17 +591,19 @@ function openMapa(opt){if(!PAC){toast("Carregue o pacote primeiro.");return}
   {const i=$("#scan");if(i)i.blur()}document.body.classList.add("mvon");mvRender(true)}
 function closeMapa(){const el=$("#mapV");if(el)el.remove();document.body.classList.remove("mvon");closeSheet()}
 // um box no mesmo formato do mapa do app principal no celular (cartão compacto)
+const MAT_TIPOS=["Produção","Safra passada","Fibrilha","Indisponível"],MAT_COR={"Produção":["#B9824A","#A8743F","#6D4520"],"Safra passada":["#8E7CB8","#7D6BA8","#4B3D73"],"Fibrilha":["#3F9A9C","#358789","#1E5657"],"Indisponível":["#8C9499","#7D858A","#474E53"],"Outros":["#C79A2E","#B78A22","#6E5210"]};
+function matStyle(t){const k=MAT_TIPOS.find(x=>x.toLowerCase()===String(t||"").toLowerCase()),c=MAT_COR[k||"Outros"];return`--mb:${c[0]};--mb2:${c[1]};--md:${c[2]}`}
 function mvSlot(k,B,blk,L,prods,q){const pos=+k.split("|")[3],bx=Math.ceil(pos/2)+(pos%2?"A":"B");
   if(blk)return{h:`<button type="button" class="mlc blk${q||MV.hl?" dim":""}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b class="mlv">${esc(blk)}</b></button>`,oc:0,hit:0};
   const ls=(B&&B.ls||[]).map(String),hit=ls.some(c=>(q&&mvNorm(c)===q)||(MV.hl&&MV.hl.has(c))),dim=(q||MV.hl)&&!hit?" dim":"",hc=hit?" hit":"",loc=B&&B.loc?" loc":"";
-  if(!ls.length&&B&&B.mat)return{h:`<button type="button" class="mlc full matb${dim}${loc}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b>${esc(String(B.mat).toUpperCase())}</b><small>material</small></button>`,oc:1,hit:0};
+  if(!ls.length&&B&&B.mat)return{h:`<button type="button" class="mlc full matb matc${dim}${loc}" style="${matStyle(B.mat)}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b>${esc(String(B.mat).toUpperCase())}</b><small>material</small></button>`,oc:1,hit:0};
   if(!ls.length)return{h:`<button type="button" class="mlc free${dim}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b class="mlv">livre</b></button>`,oc:0,hit:0};
   if(ls.length>1){const tot=ls.reduce((t,c)=>{const bq=((L.get(c)||{}).boxes||[]).find(b=>b[0]===k);return t+(bq&&bq[2]!=null?+bq[2]:0)},0);
-    return{h:`<button type="button" class="mlc full mix${dim}${hc}${loc}" data-k="${k}"><span class="mlx">${esc(bx)}</span><b>DIVERSOS</b><small>${esc(ls.slice().sort((a,b)=>a.localeCompare(b,"pt-BR",{numeric:true})).join(", "))}</small><i>${fmt(tot)} fd</i></button>`,oc:1,hit:hit?1:0}}
+    return{h:`<button type="button" class="mlc full mix${B.mat?" matc":""}${dim}${hc}${loc}"${B.mat?` style="${matStyle(B.mat)}"`:""} data-k="${k}"><span class="mlx">${esc(bx)}</span><b>DIVERSOS</b><small>${esc(ls.slice().sort((a,b)=>a.localeCompare(b,"pt-BR",{numeric:true})).join(", "))}</small><i>${fmt(tot)} fd</i></button>`,oc:1,hit:hit?1:0}}
   const c=ls[0],l=L.get(c)||{c,prod:"",faz:"",qtd:null,den:"—",sit:"",rest:""},bq=(l.boxes||[]).find(b=>b[0]===k),pq=bq?bq[2]:null,cap=+PAC.cap||130;
   const pic=l.qtd==null?"":`<span class="mlp ${+l.qtd===cap?"fc":"pk"}" title="${+l.qtd===cap?"Fechado":"Picado"}"></span>`;
   const sc=t=>MV_SC[t]||["#ccc","#1D2E2C"];
-  return{h:`<button type="button" class="mlc full${dim}${hc}${loc}" style="background:${mvCor(l.prod,prods)}" data-k="${k}"><span class="mlx">${esc(bx)}</span>${pic}<b>${esc(c)}</b><small>${esc(l.faz||l.prod||"—")}</small><i>${pq==null||pq===""?"—":fmt(pq)} / ${esc(l.den)}</i>${l.sit?`<span class="mlsr"><span class="mls" style="background:${sc(l.sit)[0]};color:${sc(l.sit)[1]}">${esc(l.sit)}</span>${l.rest==="⚠️CONTAR"?`<span class="mls mlw" style="background:${sc("⚠️CONTAR")[0]};color:${sc("⚠️CONTAR")[1]}">⚠️</span>`:""}</span>`:""}</button>`,oc:1,hit:hit?1:0}}
+  return{h:`<button type="button" class="mlc full${B.mat?" matc":""}${dim}${hc}${loc}" style="${B.mat?matStyle(B.mat):`background:${mvCor(l.prod,prods)}`}" data-k="${k}"><span class="mlx">${esc(bx)}</span>${pic}<b>${esc(c)}</b><small>${esc(l.faz||l.prod||"—")}</small><i>${pq==null||pq===""?"—":fmt(pq)} / ${esc(l.den)}</i>${l.sit?`<span class="mlsr"><span class="mls" style="background:${sc(l.sit)[0]};color:${sc(l.sit)[1]}">${esc(l.sit)}</span>${l.rest==="⚠️CONTAR"?`<span class="mls mlw" style="background:${sc("⚠️CONTAR")[0]};color:${sc("⚠️CONTAR")[1]}">⚠️</span>`:""}</span>`:""}</button>`,oc:1,hit:hit?1:0}}
 // um pátio: grade de células (b = box, r = rua, t = transversal, e = estrutura, . = vazio)
 function mvPatio(G,BX,L,prods,q){const[bid,h,w,rows,cel,est]=G,at=new Map();for(const c of cel)at.set(c[1]+"|"+c[2],c);const E=new Map((est||[]).map(e=>[e[0]+"|"+e[1],e[2]]));
   // estruturas mescladas (mesmo grupo): um bloco só cobrindo as células, como no app principal
